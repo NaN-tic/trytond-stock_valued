@@ -68,45 +68,6 @@ class Move:
             return self.currency.digits
         return 2
 
-    def _taxes_amount(self):
-        pool = Pool()
-        Invoice = pool.get('account.invoice')
-        Tax = pool.get('account.tax')
-        try:
-            PurchaseLine = pool.get('purchase.line')
-        except:
-            PurchaseLine = type(None)
-        try:
-            SaleLine = pool.get('sale.line')
-        except:
-            SaleLine = type(None)
-
-        origin = self.origin
-        if isinstance(origin, self.__class__):
-            origin = origin.origin
-        if (not self.unit_price or not origin or
-                not isinstance(origin, (SaleLine, PurchaseLine))):
-            return {}
-
-        if isinstance(origin, SaleLine) and origin.quantity >= 0:
-            inv_type = 'out_invoice'
-        elif isinstance(origin, SaleLine):
-            inv_type = 'out_credit_note'
-        elif (isinstance(origin, PurchaseLine) and
-                origin.quantity >= 0):
-            inv_type = 'in_invoice'
-        else:
-            inv_type = 'in_credit_note'
-
-        tax_list = Tax.compute(origin.taxes, self.unit_price,
-            self.quantity)
-        # Don't round on each line to handle rounding error
-        taxes = {}
-        for tax in tax_list:
-            key, val = Invoice._compute_tax(tax, inv_type)
-            taxes[key] = val['amount']
-        return taxes
-
     @classmethod
     def get_origin_fields(cls, moves, names):
         result = {}

@@ -1,15 +1,13 @@
 # The COPYRIGHT file at the top level of this repository contains the full
 # copyright notices and license terms.
-from copy import copy
 from decimal import Decimal
 
 from trytond.model import fields
-from trytond.pool import Pool, PoolMeta
+from trytond.pool import PoolMeta
 from trytond.pyson import Eval
-from trytond.transaction import Transaction
+from trytond.modules.account.tax import TaxableMixin
 
 __all__ = ['ShipmentIn', 'ShipmentOut']
-__metaclass__ = PoolMeta
 
 MOVES = {
     'stock.shipment.in': 'incoming_moves',
@@ -19,7 +17,7 @@ MOVES = {
     }
 
 
-class ShipmentValuedMixin:
+class ShipmentValuedMixin(TaxableMixin):
     currency = fields.Function(fields.Many2One('currency.currency',
             'Currency'),
         'on_change_with_currency')
@@ -61,32 +59,35 @@ class ShipmentValuedMixin:
             return self.company.currency.digits
         return 2
 
-    def calc_amounts(self):
-        Currency = Pool().get('currency.currency')
-        Date = Pool().get('ir.date')
-        untaxed_amount = Decimal(0)
-        taxes = {}
-        for move in getattr(self, MOVES.get(self.__name__)):
+    @property
+    def valued_moves(self):
+        return getattr(self, MOVES.get(self.__name__), [])
+
+    @property
+    def taxable_lines(self):
+        taxable_lines = []
+        # In case we're called from an on_change we have to use some sensible
+        # defaults
+        for move in self.valued_moves:
             if move.state == 'cancelled':
                 continue
-            if move.currency and move.currency != self.company.currency:
-                # convert wrt currency
-                date = self.effective_date or Date.today()
-                with Transaction().set_context(date=date):
-                    untaxed_amount += Currency.compute(move.currency,
-                        move.untaxed_amount, self.company.currency,
-                        round=False)
-                    for key, value in move._taxes_amount().items():
-                        value = Currency.compute(move.currency, value,
-                            self.company.currency, round=False)
-                        taxes[key] = taxes.get(key, Decimal(0)) + value
-            else:
-                untaxed_amount += move.untaxed_amount
-                for key, value in move._taxes_amount().items():
-                    taxes[key] = taxes.get(key, Decimal(0)) + value
+            taxable_lines.append(tuple())
+            for attribute, default_value in [
+                    ('taxes', []),
+                    ('unit_price', Decimal(0)),
+                    ('quantity', 0.),
+                    ]:
+                value = getattr(move, attribute, None)
+                taxable_lines[-1] += (
+                    value if value is not None else default_value,)
+        return taxable_lines
 
+    def calc_amounts(self):
+        untaxed_amount = sum((m.untaxed_amount for m in self.valued_moves),
+            Decimal(0))
+        taxes = self._get_taxes()
         untaxed_amount = self.company.currency.round(untaxed_amount)
-        tax_amount = sum((self.company.currency.round(tax)
+        tax_amount = sum((self.company.currency.round(tax['amount'])
                 for tax in taxes.values()), Decimal(0))
         return {
             'untaxed_amount': untaxed_amount,
@@ -123,6 +124,7 @@ class ShipmentValuedMixin:
 
 class ShipmentIn(ShipmentValuedMixin):
     __name__ = 'stock.shipment.in'
+    __metaclass__ = PoolMeta
 
     @classmethod
     def create(cls, shipments):
@@ -167,6 +169,7 @@ class ShipmentIn(ShipmentValuedMixin):
 
 class ShipmentOut(ShipmentValuedMixin):
     __name__ = 'stock.shipment.out'
+    __metaclass__ = PoolMeta
 
     @classmethod
     def wait(cls, shipments):
