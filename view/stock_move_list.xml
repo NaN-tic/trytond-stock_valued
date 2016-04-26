@@ -4,6 +4,8 @@
 <data>
     <xpath expr="/tree/field[@name='uom']" position="after">
         <field name="unit_price"/>
-        <field name="total_amount"/>
+    </xpath>
+    <xpath expr="/tree/field[@name='effective_date']" position="after">
+        <field name="amount"/>
     </xpath>
 </data>
