@@ -30,21 +30,13 @@ class Move:
     discount = fields.Function(fields.Numeric('Discount',
             digits=discount_digits, states=STATES, depends=['state']),
         'get_origin_fields')
-    untaxed_amount = fields.Function(fields.Numeric('Untax Amount',
-            digits=(16, Eval('currency_digits', 2)), states=STATES,
-            depends=['currency_digits', 'state']),
+    amount = fields.Function(fields.Numeric('Amount',
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
         'get_origin_fields')
     taxes = fields.Function(fields.Many2Many('account.tax', None, None,
             'Taxes'),
         'get_origin_fields')
-    tax_amount = fields.Function(fields.Numeric('Tax Amount',
-            digits=(16, Eval('currency_digits', 2)), states=STATES,
-            depends=['currency_digits', 'state']),
-        'get_tax_amount')
-    total_amount = fields.Function(fields.Numeric('Total Amount',
-            digits=(16, Eval('currency_digits', 2)),
-            depends=['currency_digits']),
-        'get_total_amount')
 
     @classmethod
     def __setup__(cls):
@@ -77,28 +69,15 @@ class Move:
             origin = move.origin
             if isinstance(origin, cls):
                 origin = origin.origin
-            if 'gross_unit_price' in names:
-                result['gross_unit_price'][move.id] = (origin and
-                    hasattr(origin, 'gross_unit_price') and
-                    origin.gross_unit_price or _ZERO)
-            if 'discount' in names:
-                result['discount'][move.id] = (origin and
-                    hasattr(origin, 'discount') and
-                    origin.discount or _ZERO)
-            if 'untaxed_amount' in names:
-                result['untaxed_amount'][move.id] = (
-                    Decimal(str(move.quantity or 0)) *
+            for name in names:
+                default = [] if name == 'taxes' else _ZERO
+                result[name][move.id] = (origin and
+                    hasattr(origin, name) and
+                    getattr(origin, name) or default)
+            if 'amount' in names and not result['amount'][move.id]:
+                value = (Decimal(str(move.quantity or 0)) *
                     (move.unit_price or _ZERO))
-            if 'taxes' in names:
-                result['taxes'][move.id] = (origin and
-                    hasattr(origin, 'taxes') and
-                    [t.id for t in origin.taxes] or [])
+                if move.currency:
+                    value = move.currency.round(value)
+                result['amount'][move.id] = value
         return result
-
-    def get_total_amount(self, name):
-        return self.untaxed_amount + self.tax_amount
-
-    def get_tax_amount(self, name):
-        return sum((self.currency.round(tax)
-                for tax in self._taxes_amount().values()),
-            _ZERO)

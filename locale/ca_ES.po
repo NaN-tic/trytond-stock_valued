@@ -1,6 +1,10 @@
-# 
+#
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "field:stock.move,amount:"
+msgid "Amount"
+msgstr "Import"
 
 msgctxt "field:stock.move,currency_digits:"
 msgid "Currency Digits"
@@ -14,21 +18,9 @@ msgctxt "field:stock.move,gross_unit_price:"
 msgid "Gross Price"
 msgstr "Preu brut"
 
-msgctxt "field:stock.move,tax_amount:"
-msgid "Tax Amount"
-msgstr "Impostos"
-
 msgctxt "field:stock.move,taxes:"
 msgid "Taxes"
 msgstr "Impostos"
-
-msgctxt "field:stock.move,total_amount:"
-msgid "Total Amount"
-msgstr "Total"
-
-msgctxt "field:stock.move,untaxed_amount:"
-msgid "Untax Amount"
-msgstr "Import (sense imp.)"
 
 msgctxt "field:stock.shipment.in,currency:"
 msgid "Currency"
