@@ -10,7 +10,7 @@ from trytond.modules.product import price_digits
 try:
     from trytond.modules.account_invoice_discount import discount_digits
 except ImportError:
-    didscount_digits = None
+    discount_digits = None
 
 
 __all__ = ['Move']
