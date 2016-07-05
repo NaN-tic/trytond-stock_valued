@@ -7,7 +7,10 @@ from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Equal, Eval, Not
 from trytond.transaction import Transaction
 from trytond.modules.product import price_digits
-from trytond.modules.account_invoice_discount import discount_digits
+try:
+    from trytond.modules.account_invoice_discount import discount_digits
+except ImportError:
+    didscount_digits = None
 
 
 __all__ = ['Move']
@@ -27,9 +30,6 @@ class Move:
     gross_unit_price = fields.Function(fields.Numeric('Gross Price',
             digits=price_digits, states=STATES, depends=['state']),
         'get_origin_fields')
-    discount = fields.Function(fields.Numeric('Discount',
-            digits=discount_digits, states=STATES, depends=['state']),
-        'get_origin_fields')
     amount = fields.Function(fields.Numeric('Amount',
             digits=(16, Eval('currency_digits', 2)),
             depends=['currency_digits']),
@@ -45,6 +45,10 @@ class Move:
         if unit_price_invisible:
             cls.unit_price.states['readonly'] = unit_price_invisible
             cls.unit_price.states['invisible'] = {}
+        if discount_digits:
+            cls.discount = fields.Function(fields.Numeric('Discount',
+                    digits=discount_digits, states=STATES, depends=['state']),
+                'get_origin_fields')
 
     @staticmethod
     def default_currency_digits():
