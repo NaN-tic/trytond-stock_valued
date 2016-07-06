@@ -14,7 +14,6 @@ except ImportError:
 
 
 __all__ = ['Move']
-__metaclass__ = PoolMeta
 
 _ZERO = Decimal('0.0')
 STATES = {
@@ -24,6 +23,7 @@ STATES = {
 
 class Move:
     __name__ = 'stock.move'
+    __metaclass__ = PoolMeta
 
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
         'on_change_with_currency_digits')
