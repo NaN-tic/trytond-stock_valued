@@ -15,6 +15,12 @@ MOVES = {
     'stock.shipment.out': 'outgoing_moves',
     'stock.shipment.out.return': 'incoming_moves',
     }
+TAX_TYPE = {
+    'stock.shipment.in': 'invoice',
+    'stock.shipment.in.return': 'credit_note',
+    'stock.shipment.out': 'invoice',
+    'stock.shipment.out.return': 'credit_note',
+    }
 
 
 class ShipmentValuedMixin(TaxableMixin):
@@ -62,6 +68,10 @@ class ShipmentValuedMixin(TaxableMixin):
     @property
     def valued_moves(self):
         return getattr(self, MOVES.get(self.__name__), [])
+
+    @property
+    def tax_type(self):
+        return TAX_TYPE.get(self.__name__)
 
     @property
     def taxable_lines(self):
