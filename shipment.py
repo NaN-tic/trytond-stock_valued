@@ -93,7 +93,7 @@ class ShipmentValuedMixin(TaxableMixin):
         return taxable_lines
 
     def calc_amounts(self):
-        untaxed_amount = sum((m.amount for m in self.valued_moves),
+        untaxed_amount = sum((m.amount for m in self.valued_moves if m.amount),
             Decimal(0))
         taxes = self._get_taxes()
         untaxed_amount = self.company.currency.round(untaxed_amount)
