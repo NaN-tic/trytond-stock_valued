@@ -163,6 +163,9 @@ class ShipmentIn(ShipmentValuedMixin):
     @classmethod
     def receive(cls, shipments):
         super(ShipmentIn, cls).receive(shipments)
+        if not shipments:
+            return
+
         to_write = []
         for shipment in shipments:
             to_write.extend(([shipment], shipment.calc_amounts()))
@@ -171,6 +174,9 @@ class ShipmentIn(ShipmentValuedMixin):
     @classmethod
     def done(cls, shipments):
         super(ShipmentIn, cls).done(shipments)
+        if not shipments:
+            return
+
         to_write = []
         for shipment in shipments:
             to_write.extend(([shipment], shipment.calc_amounts()))
@@ -184,6 +190,9 @@ class ShipmentOut(ShipmentValuedMixin):
     @classmethod
     def wait(cls, shipments):
         super(ShipmentOut, cls).wait(shipments)
+        if not shipments:
+            return
+
         to_write = []
         for shipment in shipments:
             to_write.extend(([shipment], shipment.calc_amounts()))
@@ -192,6 +201,9 @@ class ShipmentOut(ShipmentValuedMixin):
     @classmethod
     def assign(cls, shipments):
         super(ShipmentOut, cls).assign(shipments)
+        if not shipments:
+            return
+
         to_write = []
         for shipment in shipments:
             to_write.extend(([shipment], shipment.calc_amounts()))
@@ -200,6 +212,9 @@ class ShipmentOut(ShipmentValuedMixin):
     @classmethod
     def pack(cls, shipments):
         super(ShipmentOut, cls).pack(shipments)
+        if not shipments:
+            return
+
         to_write = []
         for shipment in shipments:
             to_write.extend(([shipment], shipment.calc_amounts()))
@@ -208,6 +223,9 @@ class ShipmentOut(ShipmentValuedMixin):
     @classmethod
     def done(cls, shipments):
         super(ShipmentOut, cls).done(shipments)
+        if not shipments:
+            return
+
         to_write = []
         for shipment in shipments:
             to_write.extend(([shipment], shipment.calc_amounts()))
