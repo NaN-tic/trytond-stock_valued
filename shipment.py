@@ -55,9 +55,15 @@ class ShipmentValuedMixin(TaxableMixin):
 
     @fields.depends('company')
     def on_change_with_currency(self, name=None):
-        if self.company:
-            return self.company.currency.id
-        return None
+        currency_id = None
+        if self.valued_moves:
+            for move in self.valued_moves:
+                if move.currency:
+                    currency_id = move.currency.id
+                    break
+        if currency_id is None and self.company:
+            currency_id = self.company.currency.id
+        return currency_id
 
     @fields.depends('company')
     def on_change_with_currency_digits(self, name=None):
