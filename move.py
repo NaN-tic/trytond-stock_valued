@@ -70,10 +70,9 @@ class Move:
             if isinstance(origin, cls):
                 origin = origin.origin
             for name in names:
-                result[name][move.id] = (origin and
-                    hasattr(origin, name) and
-                    getattr(origin, name) or _ZERO)
-            if 'amount' in names and not result['amount'][move.id]:
+                result[name][move.id] = _ZERO
+
+            if 'amount' in names:
                 value = (Decimal(str(move.quantity or 0)) *
                     (move.unit_price or _ZERO))
                 if move.currency:
