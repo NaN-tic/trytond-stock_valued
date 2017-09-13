@@ -84,3 +84,36 @@ class Move:
                     hasattr(origin, 'taxes') and
                     [t.id for t in origin.taxes] or [])
         return result
+
+    def on_change_product(self):
+        pool = Pool()
+        Uom = pool.get('product.uom')
+        Currency = pool.get('currency.currency')
+
+        super(Move, self).on_change_product()
+
+        if self.product:
+            unit_price = None
+
+            # stock shipment out return
+            if (self.from_location.type == 'customer' and
+                    self.to_location.type == 'storage'):
+                unit_price = self.product.list_price
+            else:
+                if self.to_location and self.to_location.type == 'storage':
+                    if hasattr(self, 'shipment') and (self.shipment.__name__ in
+                            ['stock.shipment.out', 'stock.shiment.out.return']):
+                        unit_price = self.product.list_price
+                    else:
+                        unit_price = self.product.cost_price
+                elif self.to_location and self.to_location.type == 'supplier':
+                    unit_price = self.product.cost_price
+
+            if unit_price:
+                if self.uom != self.product.default_uom:
+                    unit_price = Uom.compute_price(self.product.default_uom,
+                        unit_price, self.uom)
+                if self.currency and self.company:
+                    unit_price = Currency.compute(self.company.currency,
+                        unit_price, self.currency, round=False)
+                self.unit_price = unit_price

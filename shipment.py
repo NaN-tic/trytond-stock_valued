@@ -3,11 +3,11 @@
 from decimal import Decimal
 
 from trytond.model import fields
-from trytond.pool import PoolMeta
+from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Eval
 from trytond.modules.account.tax import TaxableMixin
 
-__all__ = ['ShipmentIn', 'ShipmentOut']
+__all__ = ['ShipmentIn', 'ShipmentOut', 'ShipmentOutReturn']
 
 MOVES = {
     'stock.shipment.in': 'incoming_moves',
@@ -176,6 +176,13 @@ class ShipmentIn(ShipmentValuedMixin):
             to_write.extend(([shipment], shipment.calc_amounts()))
         cls.write(*to_write)
 
+    @classmethod
+    def _get_inventory_moves(cls, incoming_move):
+        # set unit_price from product cost price in inventory moves
+        move = super(ShipmentIn, cls)._get_inventory_moves(incoming_move)
+        move.unit_price = move.product.cost_price or Decimal('0')
+        return move
+
 
 class ShipmentOut(ShipmentValuedMixin):
     __name__ = 'stock.shipment.out'
@@ -212,3 +219,27 @@ class ShipmentOut(ShipmentValuedMixin):
         for shipment in shipments:
             to_write.extend(([shipment], shipment.calc_amounts()))
         cls.write(*to_write)
+
+
+class ShipmentOutReturn:
+    __name__ = 'stock.shipment.out.return'
+    __metaclass__ = PoolMeta
+
+    # TODO _get_inventory_moves is staticmethod
+
+    @classmethod
+    def create_inventory_moves(cls, shipments):
+        # set unit_price from product list price in inventory moves
+        Move = Pool().get('stock.move')
+
+        super(ShipmentOutReturn, cls).create_inventory_moves(shipments)
+
+        to_write = []
+        for shipment in shipments:
+            for inventory_move in shipment.inventory_moves:
+                to_write.extend(([inventory_move], {
+                    'unit_price': (inventory_move.product.list_price or
+                        Decimal('0'))}))
+
+        if to_write:
+            Move.write(*to_write)
