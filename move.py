@@ -72,6 +72,14 @@ class Move:
             for name in names:
                 result[name][move.id] = _ZERO
 
+            if 'gross_unit_price' in names:
+                result['gross_unit_price'][move.id] = (origin and
+                   hasattr(origin, 'gross_unit_price') and
+                   origin.gross_unit_price or _ZERO)
+            if 'discount' in names:
+                result['discount'][move.id] = (origin and
+                    hasattr(origin, 'discount') and
+                    origin.discount or _ZERO)
             if 'amount' in names:
                 value = (Decimal(str(move.quantity or 0)) *
                     (move.unit_price or _ZERO))
