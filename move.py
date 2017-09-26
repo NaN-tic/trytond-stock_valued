@@ -11,15 +11,16 @@ from trytond.modules.account_invoice_discount import discount_digits
 
 
 __all__ = ['Move']
-__metaclass__ = PoolMeta
 
 _ZERO = Decimal('0.0')
+
 STATES = {
     'invisible': Not(Equal(Eval('state', ''), 'done')),
     }
 
 
 class Move:
+    __metaclass__ = PoolMeta
     __name__ = 'stock.move'
 
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
