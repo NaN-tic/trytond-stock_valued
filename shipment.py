@@ -11,13 +11,6 @@ from trytond.transaction import Transaction
 __all__ = ['ShipmentIn', 'ShipmentOut']
 __metaclass__ = PoolMeta
 
-MOVES = {
-    'stock.shipment.in': 'incoming_moves',
-    'stock.shipment.in.return': 'moves',
-    'stock.shipment.out': 'outgoing_moves',
-    'stock.shipment.out.return': 'incoming_moves',
-    }
-
 
 class ShipmentValuedMixin:
     currency = fields.Function(fields.Many2One('currency.currency',
@@ -49,6 +42,14 @@ class ShipmentValuedMixin:
         readonly=True,
         depends=['currency_digits']), 'get_amounts')
 
+    def get_moves2amount(self):
+        return {
+            'stock.shipment.in': 'incoming_moves',
+            'stock.shipment.in.return': 'moves',
+            'stock.shipment.out': 'outgoing_moves',
+            'stock.shipment.out.return': 'incoming_moves',
+            }
+
     @fields.depends('company')
     def on_change_with_currency(self, name=None):
         if self.company:
@@ -66,7 +67,8 @@ class ShipmentValuedMixin:
         Date = Pool().get('ir.date')
         untaxed_amount = Decimal(0)
         taxes = {}
-        for move in getattr(self, MOVES.get(self.__name__)):
+        moves2amount = self.get_moves2amount()
+        for move in getattr(self, moves2amount.get(self.__name__)):
             if move.state == 'cancelled':
                 continue
             if move.currency and move.currency != self.company.currency:
