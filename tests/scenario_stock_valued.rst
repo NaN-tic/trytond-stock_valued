@@ -74,15 +74,15 @@ Create product::
     >>> template.purchasable = True
     >>> template.salable = True
     >>> template.list_price = Decimal('10')
-    >>> template.cost_price = Decimal('5')
     >>> template.cost_price_method = 'fixed'
     >>> template.account_expense = expense
     >>> template.account_revenue = revenue
     >>> template.customer_taxes.append(tax)
     >>> template.supplier_taxes.append(Tax(tax.id))
+    >>> product, = template.products
+    >>> product.cost_price = Decimal('5')
     >>> template.save()
-    >>> product.template = template
-    >>> product.save()
+    >>> product, = template.products
 
 Create payment term::
 
@@ -92,11 +92,13 @@ Create payment term::
 Purchase 5 products::
 
     >>> Purchase = Model.get('purchase.purchase')
+    >>> PurchaseLine = Model.get('purchase.line')
     >>> purchase = Purchase()
     >>> purchase.party = supplier
     >>> purchase.payment_term = payment_term
     >>> purchase.invoice_method = 'order'
-    >>> purchase_line = purchase.lines.new()
+    >>> purchase_line = PurchaseLine()
+    >>> purchase.lines.append(purchase_line)
     >>> purchase_line.product = product
     >>> purchase_line.quantity = 5.0
     >>> purchase.click('quote')
