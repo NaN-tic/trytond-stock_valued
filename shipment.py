@@ -132,7 +132,8 @@ class ShipmentIn(ShipmentValuedMixin):
         to_write = []
         for shipment in shipments:
             to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
+        if to_write:
+            cls.write(*to_write)
         return shipments
 
     @classmethod
