@@ -2,7 +2,7 @@
 <!-- The COPYRIGHT file at the top level of this repository contains the full
      copyright notices and license terms. -->
 <data>
-    <xpath expr="/form/field[@name='assignation_required']" position="after">
+    <xpath expr="/form/field[@name='unit_digits']" position="after">
         <field name="amount" invisible="1" colspan="4"/>
     </xpath>
 </data>
