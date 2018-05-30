@@ -105,6 +105,13 @@ class ShipmentValuedMixin(TaxableMixin):
             'total_amount': untaxed_amount + tax_amount,
             }
 
+    def get_func_amounts(self):
+        return {
+            'untaxed_amount': self.untaxed_amount_func,
+            'tax_amount': self.tax_amount_func,
+            'total_amount': self.total_amount_func,
+            }
+
     @classmethod
     def get_amounts(cls, shipments, names):
         untaxed_amount = dict((i.id, Decimal(0)) for i in shipments)
@@ -112,15 +119,11 @@ class ShipmentValuedMixin(TaxableMixin):
         total_amount = dict((i.id, Decimal(0)) for i in shipments)
 
         for shipment in shipments:
-            if shipment.untaxed_amount:
-                untaxed_amount[shipment.id] = shipment.untaxed_amount
-                tax_amount[shipment.id] = shipment.tax_amount
-                total_amount[shipment.id] = shipment.total_amount
-            else:
-                res = shipment.calc_amounts()
-                untaxed_amount[shipment.id] = res['untaxed_amount']
-                tax_amount[shipment.id] = res['tax_amount']
-                total_amount[shipment.id] = res['total_amount']
+            res = shipment.calc_amounts()
+            untaxed_amount[shipment.id] = res['untaxed_amount']
+            tax_amount[shipment.id] = res['tax_amount']
+            total_amount[shipment.id] = res['total_amount']
+
         result = {
             'untaxed_amount_func': untaxed_amount,
             'tax_amount_func': tax_amount,
@@ -141,7 +144,9 @@ class ShipmentIn(ShipmentValuedMixin):
         shipments = super(ShipmentIn, cls).create(shipments)
         to_write = []
         for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
+            if shipment.state not in ('done', 'cancelled'):
+                values = shipment.get_func_amounts()
+                to_write.extend(([shipment], values))
         cls.write(*to_write)
         return shipments
 
@@ -155,26 +160,11 @@ class ShipmentIn(ShipmentValuedMixin):
         super(ShipmentIn, cls).write(*args)
         to_write = []
         for shipment in to_update:
-            values = shipment.calc_amounts()
-            to_write.extend(([shipment], values))
+            if shipment.state not in ('done', 'cancelled'):
+                values = shipment.get_func_amounts()
+                to_write.extend(([shipment], values))
         if to_write:
             cls.write(*to_write)
-
-    @classmethod
-    def receive(cls, shipments):
-        super(ShipmentIn, cls).receive(shipments)
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
-
-    @classmethod
-    def done(cls, shipments):
-        super(ShipmentIn, cls).done(shipments)
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
 
 
 class ShipmentOut(ShipmentValuedMixin):
@@ -182,33 +172,28 @@ class ShipmentOut(ShipmentValuedMixin):
     __metaclass__ = PoolMeta
 
     @classmethod
-    def wait(cls, shipments):
-        super(ShipmentOut, cls).wait(shipments)
+    def create(cls, shipments):
+        shipments = super(ShipmentOut, cls).create(shipments)
         to_write = []
         for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
+            if shipment.state not in ('done', 'cancelled'):
+                values = shipment.get_func_amounts()
+                to_write.extend(([shipment], values))
         cls.write(*to_write)
+        return shipments
 
     @classmethod
-    def assign(cls, shipments):
-        super(ShipmentOut, cls).assign(shipments)
+    def write(cls, *args):
+        actions = iter(args)
+        to_update = []
+        for shipments, values in zip(actions, actions):
+            if set(values) & set(['outgoing_moves']):
+                to_update.extend(shipments)
+        super(ShipmentOut, cls).write(*args)
         to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
-
-    @classmethod
-    def pack(cls, shipments):
-        super(ShipmentOut, cls).pack(shipments)
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
-
-    @classmethod
-    def done(cls, shipments):
-        super(ShipmentOut, cls).done(shipments)
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
+        for shipment in to_update:
+            if shipment.state not in ('done', 'cancelled'):
+                values = shipment.get_func_amounts()
+                to_write.extend(([shipment], values))
+        if to_write:
+            cls.write(*to_write)
