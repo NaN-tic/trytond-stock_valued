@@ -1,7 +1,7 @@
 # The COPYRIGHT file at the top level of this repository contains the full
 # copyright notices and license terms.
 from decimal import Decimal
-
+from trytond import backend
 from trytond.model import fields
 from trytond.pool import PoolMeta
 from trytond.pyson import Eval
@@ -29,26 +29,26 @@ class ShipmentValuedMixin(TaxableMixin):
         'on_change_with_currency')
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
         'on_change_with_currency_digits')
-    untaxed_amount = fields.Numeric('Untaxed',
+    untaxed_amount_cache = fields.Numeric('Untaxed Cache',
         digits=(16, Eval('currency_digits', 2)),
         readonly=True,
         depends=['currency_digits'])
-    tax_amount = fields.Numeric('Tax',
+    tax_amount_cache = fields.Numeric('Tax Cache',
         digits=(16, Eval('currency_digits', 2)),
         readonly=True,
         depends=['currency_digits'])
-    total_amount = fields.Numeric('Total',
+    total_amount_cache = fields.Numeric('Total Cache',
         digits=(16, Eval('currency_digits', 2)),
         readonly=True,
         depends=['currency_digits'])
-    untaxed_amount_func = fields.Function(fields.Numeric('Untaxed',
+    untaxed_amount = fields.Function(fields.Numeric('Untaxed',
         digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits']), 'get_amounts')
-    tax_amount_func = fields.Function(fields.Numeric('Tax',
+    tax_amount = fields.Function(fields.Numeric('Tax',
         digits=(16, Eval('currency_digits', 2)),
         readonly=True,
         depends=['currency_digits']), 'get_amounts')
-    total_amount_func = fields.Function(fields.Numeric('Total',
+    total_amount = fields.Function(fields.Numeric('Total',
         digits=(16, Eval('currency_digits', 2)),
         readonly=True,
         depends=['currency_digits']), 'get_amounts')
@@ -118,24 +118,35 @@ class ShipmentValuedMixin(TaxableMixin):
         total_amount = dict((i.id, Decimal(0)) for i in shipments)
 
         for shipment in shipments:
-            if shipment.untaxed_amount:
-                untaxed_amount[shipment.id] = shipment.untaxed_amount
-                tax_amount[shipment.id] = shipment.tax_amount
-                total_amount[shipment.id] = shipment.total_amount
+            if (shipment.state in cls._states_valued_cached
+                    and shipment.untaxed_amount_cache is not None
+                    and shipment.tax_amount_cache is not None
+                    and shipment.total_amount_cache is not None):
+                untaxed_amount[shipment.id] = shipment.untaxed_amount_cache
+                tax_amount[shipment.id] = shipment.tax_amount_cache
+                total_amount[shipment.id] = shipment.total_amount_cache
             else:
                 res = shipment.calc_amounts()
                 untaxed_amount[shipment.id] = res['untaxed_amount']
                 tax_amount[shipment.id] = res['tax_amount']
                 total_amount[shipment.id] = res['total_amount']
         result = {
-            'untaxed_amount_func': untaxed_amount,
-            'tax_amount_func': tax_amount,
-            'total_amount_func': total_amount,
+            'untaxed_amount': untaxed_amount,
+            'tax_amount': tax_amount,
+            'total_amount': total_amount,
             }
         for key in result.keys():
             if key not in names:
                 del result[key]
         return result
+
+    @classmethod
+    def store_cache(cls, shipments):
+        for shipment in shipments:
+            shipment.untaxed_amount_cache = shipment.untaxed_amount
+            shipment.tax_amount_cache = shipment.tax_amount
+            shipment.total_amount_cache = shipment.total_amount
+        cls.save(shipments)
 
 
 class ShipmentIn(ShipmentValuedMixin):
@@ -143,50 +154,32 @@ class ShipmentIn(ShipmentValuedMixin):
     __metaclass__ = PoolMeta
 
     @classmethod
-    def create(cls, shipments):
-        shipments = super(ShipmentIn, cls).create(shipments)
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
-        return shipments
+    def __setup__(cls):
+        super(ShipmentIn, cls).__setup__()
+        # The states where amounts are cached
+        cls._states_valued_cached = ['done', 'cancel']
 
     @classmethod
-    def write(cls, *args):
-        actions = iter(args)
-        to_update = []
-        for shipments, values in zip(actions, actions):
-            if set(values) & set(['incoming_moves']):
-                to_update.extend(shipments)
-        super(ShipmentIn, cls).write(*args)
-        to_write = []
-        for shipment in to_update:
-            values = shipment.calc_amounts()
-            to_write.extend(([shipment], values))
-        if to_write:
-            cls.write(*to_write)
+    def __register__(cls, module_name):
+        TableHandler = backend.get('TableHandler')
+        table = TableHandler(cls, module_name)
+
+        if table.column_exist('untaxed_amount'):
+            table.column_rename('untaxed_amount', 'untaxed_amount_cache')
+            table.column_rename('tax_amount', 'tax_amount_cache')
+            table.column_rename('total_amount', 'total_amount_cache')
+
+        super(ShipmentIn, cls).__register__(module_name)
 
     @classmethod
-    def receive(cls, shipments):
-        super(ShipmentIn, cls).receive(shipments)
-        if not shipments:
-            return
-
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
+    def cancel(cls, shipments):
+        super(ShipmentIn, cls).cancel(shipments)
+        cls.store_cache(shipments)
 
     @classmethod
     def done(cls, shipments):
         super(ShipmentIn, cls).done(shipments)
-        if not shipments:
-            return
-
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
+        cls.store_cache(shipments)
 
 
 class ShipmentOut(ShipmentValuedMixin):
@@ -194,45 +187,29 @@ class ShipmentOut(ShipmentValuedMixin):
     __metaclass__ = PoolMeta
 
     @classmethod
-    def wait(cls, shipments):
-        super(ShipmentOut, cls).wait(shipments)
-        if not shipments:
-            return
-
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
+    def __setup__(cls):
+        super(ShipmentOut, cls).__setup__()
+        # The states where amounts are cached
+        cls._states_valued_cached = ['done', 'cancel']
 
     @classmethod
-    def assign(cls, shipments):
-        super(ShipmentOut, cls).assign(shipments)
-        if not shipments:
-            return
+    def __register__(cls, module_name):
+        TableHandler = backend.get('TableHandler')
+        table = TableHandler(cls, module_name)
 
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
+        if table.column_exist('untaxed_amount'):
+            table.column_rename('untaxed_amount', 'untaxed_amount_cache')
+            table.column_rename('tax_amount', 'tax_amount_cache')
+            table.column_rename('total_amount', 'total_amount_cache')
+
+        super(ShipmentOut, cls).__register__(module_name)
 
     @classmethod
-    def pack(cls, shipments):
-        super(ShipmentOut, cls).pack(shipments)
-        if not shipments:
-            return
-
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
+    def cancel(cls, shipments):
+        super(ShipmentOut, cls).cancel(shipments)
+        cls.store_cache(shipments)
 
     @classmethod
     def done(cls, shipments):
         super(ShipmentOut, cls).done(shipments)
-        if not shipments:
-            return
-
-        to_write = []
-        for shipment in shipments:
-            to_write.extend(([shipment], shipment.calc_amounts()))
-        cls.write(*to_write)
+        cls.store_cache(shipments)

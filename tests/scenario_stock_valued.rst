@@ -128,7 +128,6 @@ Create Shipment::
     >>> shipment.click('done')
     >>> shipment.untaxed_amount, shipment.tax_amount, shipment.total_amount
     (Decimal('25.00'), Decimal('2.50'), Decimal('27.50'))
-    >>> purchase.reload()
     >>> len(purchase.shipments), len(purchase.shipment_returns)
     (1, 0)
 
