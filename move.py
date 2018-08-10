@@ -66,6 +66,10 @@ class Move:
 
     @classmethod
     def get_origin_fields(cls, moves, names):
+        pool = Pool()
+        Config = pool.get('stock.configuration')
+        config = Config(1)
+
         result = {}
         for fname in names:
             result[fname] = {}
@@ -77,7 +81,8 @@ class Move:
                 result[name][move.id] = (origin and
                     hasattr(origin, name) and
                     getattr(origin, name) or _ZERO)
-            if 'amount' in names and not result['amount'][move.id]:
+            if ('amount' in names and (not config.valued_sale_line or
+                        not result['amount'][move.id])):
                 value = (Decimal(str(move.quantity or 0)) *
                     (move.unit_price or _ZERO))
                 if move.currency:

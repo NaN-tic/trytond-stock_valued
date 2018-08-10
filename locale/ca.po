@@ -2,6 +2,10 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
 
+msgctxt "field:stock.configuration,valued_sale_line:"
+msgid "Use Valued Sale Line"
+msgstr "Usar import de les línies de venda"
+
 msgctxt "field:stock.move,amount:"
 msgid "Amount"
 msgstr "Import"
@@ -85,3 +89,11 @@ msgstr "Base imposable"
 msgctxt "field:stock.shipment.out,untaxed_amount_func:"
 msgid "Untaxed"
 msgstr "Base imposable"
+
+msgctxt "help:stock.configuration,valued_sale_line:"
+msgid ""
+"If marked valued shipment take amount from sale lines, not outgoing move "
+"shipment"
+msgstr ""
+"Si està marcat l'albarà valorat usarà els imports de les línies de "
+"venda, sinó els de les línies de moviments de sortida"
