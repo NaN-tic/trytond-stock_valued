@@ -6,9 +6,8 @@ from trytond.pool import Pool, PoolMeta
 __all__ = ['Configuration']
 
 
-class Configuration:
+class Configuration(metaclass=PoolMeta):
     __name__ = 'stock.configuration'
-    __metaclass__ = PoolMeta
 
     valued_sale_line = fields.Boolean('Use Valued Sale Line',
         help='If marked valued shipment take amount from sale lines, not '

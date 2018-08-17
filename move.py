@@ -21,9 +21,8 @@ STATES = {
     }
 
 
-class Move:
+class Move(metaclass=PoolMeta):
     __name__ = 'stock.move'
-    __metaclass__ = PoolMeta
 
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
         'on_change_with_currency_digits')

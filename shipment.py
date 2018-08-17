@@ -149,9 +149,8 @@ class ShipmentValuedMixin(TaxableMixin):
         cls.save(shipments)
 
 
-class ShipmentIn(ShipmentValuedMixin):
+class ShipmentIn(ShipmentValuedMixin, metaclass=PoolMeta):
     __name__ = 'stock.shipment.in'
-    __metaclass__ = PoolMeta
 
     @classmethod
     def __setup__(cls):
@@ -182,9 +181,8 @@ class ShipmentIn(ShipmentValuedMixin):
         cls.store_cache(shipments)
 
 
-class ShipmentOut(ShipmentValuedMixin):
+class ShipmentOut(ShipmentValuedMixin, metaclass=PoolMeta):
     __name__ = 'stock.shipment.out'
-    __metaclass__ = PoolMeta
 
     @classmethod
     def __setup__(cls):

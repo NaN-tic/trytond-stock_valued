@@ -114,7 +114,7 @@ Purchase 5 products::
     >>> purchase.untaxed_amount, purchase.tax_amount, purchase.total_amount
     (Decimal('25.00'), Decimal('2.50'), Decimal('27.50'))
     >>> purchase.state
-    u'processing'
+    'processing'
     >>> len(purchase.moves), len(purchase.shipment_returns), len(purchase.invoices)
     (1, 0, 1)
 
@@ -155,7 +155,7 @@ Sale 5 products and test it's shipment has the valued amounts::
     >>> sale.untaxed_amount, sale.tax_amount, sale.total_amount
     (Decimal('50.00'), Decimal('5.00'), Decimal('55.00'))
     >>> sale.state
-    u'processing'
+    'processing'
     >>> len(sale.shipments), len(sale.shipment_returns), len(sale.invoices)
     (1, 0, 1)
     >>> shipment, = sale.shipments
