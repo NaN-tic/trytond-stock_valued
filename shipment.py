@@ -135,7 +135,7 @@ class ShipmentValuedMixin(TaxableMixin):
             'tax_amount': tax_amount,
             'total_amount': total_amount,
             }
-        for key in result.keys():
+        for key in list(result.keys()):
             if key not in names:
                 del result[key]
         return result
