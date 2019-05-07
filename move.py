@@ -40,10 +40,6 @@ class Move(metaclass=PoolMeta):
     @classmethod
     def __setup__(cls):
         super(Move, cls).__setup__()
-        unit_price_invisible = cls.unit_price.states.get('invisible')
-        if unit_price_invisible:
-            cls.unit_price.states['readonly'] = unit_price_invisible
-            cls.unit_price.states['invisible'] = {}
         if discount_digits:
             cls.discount = fields.Function(fields.Numeric('Discount',
                     digits=discount_digits, states=STATES, depends=['state']),
