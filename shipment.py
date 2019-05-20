@@ -148,6 +148,14 @@ class ShipmentValuedMixin(TaxableMixin):
             shipment.total_amount_cache = shipment.total_amount
         cls.save(shipments)
 
+    @classmethod
+    def reset_cache(cls, shipments):
+        for shipment in shipments:
+            shipment.untaxed_amount_cache = None
+            shipment.tax_amount_cache = None
+            shipment.total_amount_cache = None
+        cls.save(shipments)
+
 
 class ShipmentIn(ShipmentValuedMixin):
     __name__ = 'stock.shipment.in'

@@ -78,16 +78,18 @@ class Move:
             if isinstance(origin, cls):
                 origin = origin.origin
             for name in names:
-                result[name][move.id] = (origin and
-                    hasattr(origin, name) and
-                    getattr(origin, name) or _ZERO)
-            if ('amount' in names and (not config.valued_sale_line or
-                        not result['amount'][move.id])):
-                value = (Decimal(str(move.quantity or 0)) *
-                    (move.unit_price or _ZERO))
-                if move.currency:
-                    value = move.currency.round(value)
-                result['amount'][move.id] = value
+                result[name][move.id] = _ZERO
+            if 'amount' in names:
+                unit_price = None
+                if config.valued_sale_line and hasattr(origin, 'unit_price'):
+                    unit_price = origin.unit_price
+                else:
+                    unit_price = move.unit_price
+                if unit_price:
+                    value = (Decimal(str(move.quantity or 0)) * (unit_price))
+                    if move.currency:
+                        value = move.currency.round(value)
+                    result['amount'][move.id] = value
             if 'taxes' in names:
                 result['taxes'][move.id] = (origin and
                     hasattr(origin, 'taxes') and
