@@ -22,6 +22,10 @@ msgctxt "field:stock.move,taxes:"
 msgid "Taxes"
 msgstr "Impuestos"
 
+msgctxt "field:stock.move,unit_price_w_tax:"
+msgid "Unit Price with Tax"
+msgstr "Precio unidad imp. incl."
+
 msgctxt "field:stock.shipment.in,currency:"
 msgid "Currency"
 msgstr "Moneda"
