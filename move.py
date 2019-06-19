@@ -38,6 +38,11 @@ class Move:
     taxes = fields.Function(fields.Many2Many('account.tax', None, None,
             'Taxes'),
         'get_origin_fields')
+    unit_price_w_tax = fields.Function(fields.Numeric('Unit Price with Tax',
+        digits=(16, Eval('_parent_sale', {}).get('currency_digits',
+                Eval('currency_digits', 2))),
+        states=STATES,
+        depends=['currency_digits']), 'get_price_with_tax')
 
     @classmethod
     def __setup__(cls):
@@ -91,4 +96,42 @@ class Move:
                 result['taxes'][move.id] = (origin and
                     hasattr(origin, 'taxes') and
                     [t.id for t in origin.taxes] or [])
+        return result
+
+    @classmethod
+    def get_price_with_tax(cls, moves, names):
+        pool = Pool()
+        Tax = pool.get('account.tax')
+        amount_w_tax = {}
+        unit_price_w_tax = {}
+
+        def compute_amount_with_tax(move):
+            tax_amount = Decimal('0.0')
+            if move.taxes:
+                tax_list = Tax.compute(move.taxes,
+                    move.unit_price or Decimal('0.0'),
+                    move.quantity or 0.0)
+                tax_amount = sum([t['amount'] for t in tax_list], Decimal('0.0'))
+            return move.amount + tax_amount
+
+        for move in moves:
+            amount = Decimal('0.0')
+            unit_price = Decimal('0.0')
+            currency = (move.sale.currency if move.sale else move.currency)
+
+            if move.quantity and move.quantity != 0:
+                amount = compute_amount_with_tax(move)
+                unit_price = amount / Decimal(str(move.quantity))
+
+            if currency:
+                amount = currency.round(amount)
+            amount_w_tax[move.id] = amount
+            unit_price_w_tax[move.id] = unit_price
+
+        result = {
+            'unit_price_w_tax': unit_price_w_tax,
+            }
+        for key in result.keys():
+            if key not in names:
+                del result[key]
         return result
