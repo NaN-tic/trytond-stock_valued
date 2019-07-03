@@ -100,11 +100,7 @@ class Move(metaclass=PoolMeta):
                 else:
                     gross_unit_price = move.unit_price
                 if gross_unit_price:
-                    value = (Decimal(
-                        str(move.quantity or 0)) * (gross_unit_price))
-                    if move.currency:
-                        value = move.currency.round(value)
-                    result['gross_unit_price'][move.id] = value
+                    result['gross_unit_price'][move.id] = gross_unit_price
 
             if 'taxes' in names:
                 result['taxes'][move.id] = (origin and
