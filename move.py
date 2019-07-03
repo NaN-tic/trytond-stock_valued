@@ -79,6 +79,7 @@ class Move(metaclass=PoolMeta):
                 origin = origin.origin
             for name in names:
                 result[name][move.id] = _ZERO
+
             if 'amount' in names:
                 unit_price = None
                 if config.valued_sale_line and hasattr(origin, 'unit_price'):
@@ -90,6 +91,21 @@ class Move(metaclass=PoolMeta):
                     if move.currency:
                         value = move.currency.round(value)
                     result['amount'][move.id] = value
+
+            if 'gross_unit_price' in names:
+                gross_unit_price = None
+                if (config.valued_sale_line and
+                        hasattr(origin, 'gross_unit_price')):
+                    gross_unit_price = origin.gross_unit_price
+                else:
+                    gross_unit_price = move.unit_price
+                if gross_unit_price:
+                    value = (Decimal(
+                        str(move.quantity or 0)) * (gross_unit_price))
+                    if move.currency:
+                        value = move.currency.round(value)
+                    result['gross_unit_price'][move.id] = value
+
             if 'taxes' in names:
                 result['taxes'][move.id] = (origin and
                     hasattr(origin, 'taxes') and
@@ -109,7 +125,8 @@ class Move(metaclass=PoolMeta):
                 tax_list = Tax.compute(move.taxes,
                     move.unit_price or Decimal('0.0'),
                     move.quantity or 0.0)
-                tax_amount = sum([t['amount'] for t in tax_list], Decimal('0.0'))
+                tax_amount = sum([t['amount'] for t in tax_list],
+                    Decimal('0.0'))
             return move.amount + tax_amount
 
         for move in moves:
