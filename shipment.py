@@ -3,11 +3,11 @@
 from decimal import Decimal
 from trytond import backend
 from trytond.model import fields
-from trytond.pool import PoolMeta
+from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Eval
 from trytond.modules.account.tax import TaxableMixin
 
-__all__ = ['ShipmentIn', 'ShipmentOut']
+__all__ = ['ShipmentIn', 'ShipmentOut', 'ShipmentOutReturn']
 
 MOVES = {
     'stock.shipment.in': 'incoming_moves',
@@ -81,6 +81,11 @@ class ShipmentValuedMixin(TaxableMixin):
 
     @property
     def taxable_lines(self):
+        Config = Pool().get('stock.configuration')
+        config = Config(1)
+
+        valued_origin = config.valued_origin
+
         taxable_lines = []
         # In case we're called from an on_change we have to use some sensible
         # defaults
@@ -93,7 +98,14 @@ class ShipmentValuedMixin(TaxableMixin):
                     ('unit_price', Decimal(0)),
                     ('quantity', 0.),
                     ]:
-                value = getattr(move, attribute, None)
+                if attribute == 'unit_price':
+                    origin = move.origin
+                    if valued_origin and hasattr(origin, 'unit_price'):
+                        value = origin.unit_price
+                    else:
+                        value = move.unit_price
+                else:
+                    value = getattr(move, attribute, None)
                 taxable_lines[-1] += (
                     value if value is not None else default_value,)
         return taxable_lines
@@ -218,4 +230,24 @@ class ShipmentOut(ShipmentValuedMixin, metaclass=PoolMeta):
     @classmethod
     def done(cls, shipments):
         super(ShipmentOut, cls).done(shipments)
+        cls.store_cache(shipments)
+
+
+class ShipmentOutReturn(ShipmentValuedMixin, metaclass=PoolMeta):
+    __name__ = 'stock.shipment.out.return'
+
+    @classmethod
+    def __setup__(cls):
+        super(ShipmentOutReturn, cls).__setup__()
+        # The states where amounts are cached
+        cls._states_valued_cached = ['done', 'cancel']
+
+    @classmethod
+    def cancel(cls, shipments):
+        super(ShipmentOutReturn, cls).cancel(shipments)
+        cls.store_cache(shipments)
+
+    @classmethod
+    def done(cls, shipments):
+        super(ShipmentOutReturn, cls).done(shipments)
         cls.store_cache(shipments)
