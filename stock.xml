@@ -22,6 +22,13 @@
             <field name="name">shipment_amounts</field>
         </record>
 
+        <!-- stock.shipment.out.return -->
+        <record model="ir.ui.view" id="shipment_out_return_view_form">
+            <field name="model">stock.shipment.out.return</field>
+            <field name="inherit" ref="stock.shipment_out_return_view_form"/>
+            <field name="name">shipment_amounts</field>
+        </record>
+
         <!-- stock.shipment.in -->
         <record model="ir.ui.view" id="shipment_in_view_form">
             <field name="model">stock.shipment.in</field>
