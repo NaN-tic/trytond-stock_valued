@@ -11,5 +11,6 @@ def register():
         move.Move,
         shipment.ShipmentIn,
         shipment.ShipmentOut,
+        shipment.ShipmentOutReturn,
         configuration.Configuration,
         module='stock_valued', type_='model')
