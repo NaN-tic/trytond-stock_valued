@@ -4,7 +4,7 @@
 <data>
     <xpath expr="/form/field[@name='shipment_internal_sequence']"
              position="after">
-        <label name="valued_sale_line"/>
-        <field name="valued_sale_line"/>
+        <label name="valued_origin"/>
+        <field name="valued_origin"/>
     </xpath>
 </data>

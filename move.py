@@ -19,6 +19,12 @@ _ZERO = Decimal('0.0')
 STATES = {
     'invisible': Not(Equal(Eval('state', ''), 'done')),
     }
+PARTIES = {
+    'stock.shipment.in': 'supplier',
+    'stock.shipment.in.return': 'supplier',
+    'stock.shipment.out': 'customer',
+    'stock.shipment.out.return': 'customer',
+    }
 
 
 class Move(metaclass=PoolMeta):
@@ -64,10 +70,15 @@ class Move(metaclass=PoolMeta):
             return self.currency.digits
         return 2
 
+    def _get_tax_rule_pattern(self):
+        '''
+        Get tax rule pattern
+        '''
+        return {}
+
     @classmethod
     def get_origin_fields(cls, moves, names):
-        pool = Pool()
-        Config = pool.get('stock.configuration')
+        Config = Pool().get('stock.configuration')
         config = Config(1)
 
         result = {}
@@ -77,12 +88,17 @@ class Move(metaclass=PoolMeta):
             origin = move.origin
             if isinstance(origin, cls):
                 origin = origin.origin
+
+            shipment = move.shipment or None
+            party = (getattr(shipment, PARTIES.get(shipment.__name__))
+                if shipment else None)
+
             for name in names:
                 result[name][move.id] = _ZERO
 
             if 'amount' in names:
                 unit_price = None
-                if config.valued_sale_line and hasattr(origin, 'unit_price'):
+                if config.valued_origin and hasattr(origin, 'unit_price'):
                     unit_price = origin.unit_price
                 else:
                     unit_price = move.unit_price
@@ -94,18 +110,46 @@ class Move(metaclass=PoolMeta):
 
             if 'gross_unit_price' in names:
                 gross_unit_price = None
-                if (config.valued_sale_line and
+                if (config.valued_origin and
                         hasattr(origin, 'gross_unit_price')):
                     gross_unit_price = origin.gross_unit_price
                 else:
-                    gross_unit_price = move.unit_price
+                    gross_unit_price = move.unit_price_w_tax
                 if gross_unit_price:
                     result['gross_unit_price'][move.id] = gross_unit_price
 
             if 'taxes' in names:
-                result['taxes'][move.id] = (origin and
-                    hasattr(origin, 'taxes') and
-                    [t.id for t in origin.taxes] or [])
+                taxes = []
+                if config.valued_origin and hasattr(origin, 'taxes'):
+                    taxes = [t.id for t in origin.taxes]
+                else:
+                    pattern = move._get_tax_rule_pattern()
+                    tax_rule = None
+                    taxes_used = None
+                    if shipment:
+                        if shipment.__name__.startswith('stock.shipment.out'):
+                            tax_rule = party.customer_tax_rule
+                            taxes_used = (move.product.customer_taxes_used
+                                if party else [])
+                        else:
+                            tax_rule = party.supplier_tax_rule
+                            taxes_used = (move.product.supplier_taxes_used
+                                if party else [])
+
+                    for tax in taxes_used:
+                        if tax_rule:
+                            tax_ids = tax_rule.apply(tax, pattern)
+                            if tax_ids:
+                                taxes.extend(tax_ids)
+                            continue
+                        taxes.append(tax.id)
+                    if tax_rule:
+                        tax_ids = tax_rule.apply(None, pattern)
+                        if tax_ids:
+                            taxes.extend(tax_ids)
+                if taxes:
+                    result['taxes'][move.id] = taxes
+    
         return result
 
     @classmethod
