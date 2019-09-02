@@ -24,6 +24,7 @@ PARTIES = {
     'stock.shipment.in.return': 'supplier',
     'stock.shipment.out': 'customer',
     'stock.shipment.out.return': 'customer',
+    'stock.shipment.internal': 'company',
     }
 
 
@@ -90,6 +91,7 @@ class Move(metaclass=PoolMeta):
                 origin = origin.origin
 
             shipment = move.shipment or None
+
             party = (getattr(shipment, PARTIES.get(shipment.__name__))
                 if shipment else None)
 
@@ -128,11 +130,11 @@ class Move(metaclass=PoolMeta):
                     taxes_used = None
                     if shipment:
                         if shipment.__name__.startswith('stock.shipment.out'):
-                            tax_rule = party.customer_tax_rule
+                            tax_rule = party and party.customer_tax_rule or None
                             taxes_used = (move.product.customer_taxes_used
                                 if party else [])
-                        else:
-                            tax_rule = party.supplier_tax_rule
+                        elif shipment.__name__.startswith('stock.shipment.in'):
+                            tax_rule = party and party.supplier_tax_rule or None
                             taxes_used = (move.product.supplier_taxes_used
                                 if party else [])
 
@@ -149,7 +151,7 @@ class Move(metaclass=PoolMeta):
                             taxes.extend(tax_ids)
                 if taxes:
                     result['taxes'][move.id] = taxes
-    
+
         return result
 
     @classmethod
