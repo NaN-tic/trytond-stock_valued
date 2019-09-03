@@ -118,7 +118,7 @@ Purchase 5 products::
     >>> len(purchase.moves), len(purchase.shipment_returns), len(purchase.invoices)
     (1, 0, 1)
 
-Create Shipment::
+Create Supplier Shipment from purchase::
 
     >>> Move = Model.get('stock.move')
     >>> ShipmentIn = Model.get('stock.shipment.in')
@@ -167,3 +167,89 @@ Sale 5 products and test it's shipment has the valued amounts::
     >>> shipment.click('done')
     >>> shipment.untaxed_amount, shipment.tax_amount, shipment.total_amount
     (Decimal('50.00'), Decimal('5.00'), Decimal('55.00'))
+
+Create Supplier Shipment::
+
+    >>> Location = Model.get('stock.location')
+    >>> supplier_loc, = Location.find([('type', '=', 'supplier')], limit=1)
+    >>> shipment = ShipmentIn()
+    >>> shipment.supplier = supplier
+    >>> incoming_move = Move()
+    >>> shipment.incoming_moves.append(incoming_move)
+    >>> incoming_move.product = product
+    >>> incoming_move.uom = unit
+    >>> incoming_move.quantity = 1
+    >>> incoming_move.from_location = supplier_loc
+    >>> incoming_move.to_location = shipment.warehouse.input_location
+    >>> incoming_move.company = company
+    >>> incoming_move.unit_price = Decimal('1')
+    >>> incoming_move.currency = company.currency
+    >>> shipment.save()
+    >>> shipment.untaxed_amount, shipment.tax_amount, shipment.total_amount
+    (Decimal('1.00'), Decimal('0.10'), Decimal('1.10'))
+
+Create Customer Shipment::
+
+    >>> ShipmentOut = Model.get('stock.shipment.out')
+    >>> customer_loc, = Location.find([('type', '=', 'customer')], limit=1)
+    >>> shipment = ShipmentOut()
+    >>> shipment.customer = customer
+    >>> outgoing_move = Move()
+    >>> shipment.outgoing_moves.append(outgoing_move)
+    >>> outgoing_move.product = product
+    >>> outgoing_move.uom = unit
+    >>> outgoing_move.quantity = 1
+    >>> outgoing_move.from_location = shipment.warehouse.output_location
+    >>> outgoing_move.to_location = customer_loc
+    >>> outgoing_move.company = company
+    >>> outgoing_move.unit_price = Decimal('1')
+    >>> outgoing_move.currency = company.currency
+    >>> shipment.save()
+    >>> shipment.untaxed_amount, shipment.tax_amount, shipment.total_amount
+    (Decimal('1.00'), Decimal('0.10'), Decimal('1.10'))
+
+Create Customer Return Shipment::
+
+    >>> ShipmentOutReturn = Model.get('stock.shipment.out.return')
+    >>> shipment = ShipmentOutReturn()
+    >>> shipment.customer = customer
+    >>> incoming_move = Move()
+    >>> shipment.incoming_moves.append(incoming_move)
+    >>> incoming_move.product = product
+    >>> incoming_move.uom = unit
+    >>> incoming_move.quantity = 1
+    >>> incoming_move.from_location = customer_loc
+    >>> incoming_move.to_location = shipment.warehouse.input_location
+    >>> incoming_move.company = company
+    >>> incoming_move.unit_price = Decimal('1')
+    >>> incoming_move.currency = company.currency
+    >>> shipment.save()
+    >>> shipment.untaxed_amount, shipment.tax_amount, shipment.total_amount
+    (Decimal('1.00'), Decimal('0.10'), Decimal('1.10'))
+
+Create Internal Shipment::
+
+    >>> storage_location, = Location.find([('type', '=', 'storage')], limit=1)
+    >>> new_loc = Location()
+    >>> new_loc.name = 'A1'
+    >>> new_loc.parent = storage_location
+    >>> new_loc.type = 'storage'
+    >>> new_loc.save()
+    >>> ShipmentInternal = Model.get('stock.shipment.internal')
+    >>> shipment = ShipmentInternal()
+    >>> shipment.from_location = storage_location
+    >>> shipment.to_location = new_loc
+    >>> move = Move()
+    >>> shipment.moves.append(move)
+    >>> move.product = product
+    >>> move.uom = unit
+    >>> move.quantity = 1
+    >>> move.from_location = storage_location
+    >>> move.to_location = new_loc
+    >>> move.company = company
+    >>> move.unit_price = Decimal('1')
+    >>> move.currency = company.currency
+    >>> shipment.save()
+    >>> move, = shipment.moves
+    >>> move.amount, move.unit_price_w_tax, move.gross_unit_price
+    (Decimal('1.00'), Decimal('1.10'), Decimal('1.10'))
