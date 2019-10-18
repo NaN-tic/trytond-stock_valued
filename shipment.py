@@ -203,3 +203,14 @@ class ShipmentOut(ShipmentValuedMixin):
                 to_write.extend(([shipment], values))
         if to_write:
             cls.write(*to_write)
+
+    @classmethod
+    def pack(cls, shipments):
+        super(ShipmentOut, cls).pack(shipments)
+        to_write = []
+        for shipment in shipments:
+            if shipment.state not in ('done', 'cancelled'):
+                values = shipment.get_func_amounts()
+                to_write.extend(([shipment], values))
+        if to_write:
+            cls.write(*to_write)
