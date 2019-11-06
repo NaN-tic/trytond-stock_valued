@@ -161,7 +161,7 @@ class ShipmentIn(ShipmentValuedMixin):
         actions = iter(args)
         to_update = []
         for shipments, values in zip(actions, actions):
-            if set(values) & set(['incoming_moves']):
+            if set(values) & (set(['incoming_moves']) | {'scanned_quantity'}):
                 to_update.extend(shipments)
         super(ShipmentIn, cls).write(*args)
         to_write = []
