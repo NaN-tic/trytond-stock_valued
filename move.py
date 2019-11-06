@@ -87,7 +87,7 @@ class Move:
                     hasattr(origin, 'discount') and
                     origin.discount or _ZERO)
             if 'amount' in names:
-                value = (Decimal(str(move.quantity or 0)) *
+                value = (Decimal(str(move.get_quantity_for_value() or 0)) *
                     (move.unit_price or _ZERO))
                 if move.currency:
                     value = move.currency.round(value)
@@ -97,6 +97,9 @@ class Move:
                     hasattr(origin, 'taxes') and
                     [t.id for t in origin.taxes] or [])
         return result
+
+    def get_quantity_for_value(self):
+        return self.quantity
 
     @classmethod
     def get_price_with_tax(cls, moves, names):
