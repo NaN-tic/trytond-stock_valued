@@ -108,7 +108,7 @@ class Move(metaclass=PoolMeta):
                 else:
                     unit_price = move.unit_price
                 if unit_price:
-                    value = (Decimal(str(move.quantity or 0)) * (unit_price))
+                    value = (Decimal(str(move.get_quantity_for_value() or 0)) * (unit_price))
                     if move.currency:
                         value = move.currency.round(value)
                     result['amount'][move.id] = value
@@ -156,6 +156,9 @@ class Move(metaclass=PoolMeta):
                     result['taxes'][move.id] = taxes
 
         return result
+
+    def get_quantity_for_value(self):
+        return self.quantity
 
     @classmethod
     def get_price_with_tax(cls, moves, names):
