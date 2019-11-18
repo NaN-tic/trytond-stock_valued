@@ -73,7 +73,16 @@ class ShipmentValuedMixin(TaxableMixin):
 
     @property
     def valued_moves(self):
-        return getattr(self, MOVES.get(self.__name__), [])
+        Move = Pool().get('stock.move')
+
+        origins = Move._get_origin()
+        keep_origin = True if 'stock.move' in origins else False
+        move_field = MOVES.get(self.__name__)
+        if (keep_origin and self.__name__ == 'stock.shipment.out'):
+            moves = getattr(self, 'inventory_moves', [])
+            if moves:
+                return moves
+        return getattr(self, move_field, [])
 
     @property
     def tax_type(self):
@@ -81,9 +90,11 @@ class ShipmentValuedMixin(TaxableMixin):
 
     @property
     def taxable_lines(self):
-        Config = Pool().get('stock.configuration')
-        config = Config(1)
+        pool = Pool()
+        Config = pool.get('stock.configuration')
+        Move = pool.get('stock.move')
 
+        config = Config(1)
         valued_origin = config.valued_origin
 
         taxable_lines = []
@@ -100,10 +111,12 @@ class ShipmentValuedMixin(TaxableMixin):
                     ]:
                 if attribute == 'unit_price':
                     origin = move.origin
+                    if isinstance(origin, Move):
+                        origin = origin.origin
                     if valued_origin and hasattr(origin, 'unit_price'):
-                        value = origin.unit_price
+                        value = origin.unit_price or origin.product.list_price
                     else:
-                        value = move.unit_price
+                        value = move.unit_price or move.product.list_price
                 else:
                     value = getattr(move, attribute, None)
                 taxable_lines[-1] += (
