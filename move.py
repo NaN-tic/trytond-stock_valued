@@ -89,7 +89,6 @@ class Move(metaclass=PoolMeta):
             origin = move.origin
             if isinstance(origin, cls):
                 origin = origin.origin
-
             shipment = move.shipment or None
 
             party = (getattr(shipment, PARTIES.get(shipment.__name__))
@@ -104,11 +103,14 @@ class Move(metaclass=PoolMeta):
             if 'amount' in names:
                 unit_price = None
                 if config.valued_origin and hasattr(origin, 'unit_price'):
-                    unit_price = origin.unit_price
+                    unit_price = (origin.unit_price
+                        or move.product.list_price or _ZERO)
                 else:
-                    unit_price = move.unit_price
+                    unit_price = (move.unit_price
+                        or move.product.list_price or _ZERO)
                 if unit_price:
-                    value = (Decimal(str(move.get_quantity_for_value() or 0)) * (unit_price))
+                    value = (Decimal(
+                        str(move.get_quantity_for_value() or 0)) * (unit_price))
                     if move.currency:
                         value = move.currency.round(value)
                     result['amount'][move.id] = value
