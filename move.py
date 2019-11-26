@@ -106,7 +106,7 @@ class Move(metaclass=PoolMeta):
                     unit_price = (origin.unit_price if origin.unit_price != None
                         else (move.product.list_price or _ZERO))
                 else:
-                    unit_price = (move.unit_price if nove.unit_price != None
+                    unit_price = (move.unit_price if move.unit_price != None
                         else (move.product.list_price or _ZERO))
                 if unit_price:
                     value = (Decimal(
