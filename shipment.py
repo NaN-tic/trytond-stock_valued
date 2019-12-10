@@ -193,8 +193,7 @@ class ShipmentIn(ShipmentValuedMixin, metaclass=PoolMeta):
 
     @classmethod
     def __register__(cls, module_name):
-        TableHandler = backend.get('TableHandler')
-        table = TableHandler(cls, module_name)
+        table = backend.TableHandler(cls, module_name)
 
         if table.column_exist('untaxed_amount'):
             table.column_rename('untaxed_amount', 'untaxed_amount_cache')
@@ -225,8 +224,7 @@ class ShipmentOut(ShipmentValuedMixin, metaclass=PoolMeta):
 
     @classmethod
     def __register__(cls, module_name):
-        TableHandler = backend.get('TableHandler')
-        table = TableHandler(cls, module_name)
+        table = backend.TableHandler(cls, module_name)
 
         if table.column_exist('untaxed_amount'):
             table.column_rename('untaxed_amount', 'untaxed_amount_cache')
