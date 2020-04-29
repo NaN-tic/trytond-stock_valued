@@ -10,7 +10,7 @@ from trytond.modules.product import price_digits
 try:
     from trytond.modules.account_invoice_discount import discount_digits
 except ImportError:
-    discount_digits = None
+    discount_digits = price_digits
 
 
 __all__ = ['Move']
@@ -48,14 +48,9 @@ class Move(metaclass=PoolMeta):
                 Eval('currency_digits', 2))),
         states=STATES,
         depends=['currency_digits']), 'get_price_with_tax')
-
-    @classmethod
-    def __setup__(cls):
-        super(Move, cls).__setup__()
-        if discount_digits:
-            cls.discount = fields.Function(fields.Numeric('Discount',
-                    digits=discount_digits, states=STATES, depends=['state']),
-                'get_origin_fields')
+    discount = fields.Function(fields.Numeric('Discount',
+            digits=discount_digits, states=STATES, depends=['state']),
+        'get_origin_fields')
 
     @staticmethod
     def default_currency_digits():
@@ -157,6 +152,12 @@ class Move(metaclass=PoolMeta):
                 if taxes:
                     result['taxes'][move.id] = taxes
 
+            if 'discount' in names:
+                if (config.valued_origin and hasattr(origin, 'discount')):
+                    discount = origin.discount
+                else:
+                    discount = Decimal(0)
+                result['discount'][move.id] = discount
         return result
 
     def get_quantity_for_value(self):
