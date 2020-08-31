@@ -190,7 +190,7 @@ class ShipmentIn(ShipmentValuedMixin, metaclass=PoolMeta):
     def __setup__(cls):
         super(ShipmentIn, cls).__setup__()
         # The states where amounts are cached
-        cls._states_valued_cached = ['done', 'cancel']
+        cls._states_valued_cached = ['done', 'cancelled']
 
     @classmethod
     def __register__(cls, module_name):
@@ -221,7 +221,7 @@ class ShipmentOut(ShipmentValuedMixin, metaclass=PoolMeta):
     def __setup__(cls):
         super(ShipmentOut, cls).__setup__()
         # The states where amounts are cached
-        cls._states_valued_cached = ['done', 'cancel']
+        cls._states_valued_cached = ['done', 'cancelled']
 
     @classmethod
     def __register__(cls, module_name):
@@ -252,7 +252,7 @@ class ShipmentOutReturn(ShipmentValuedMixin, metaclass=PoolMeta):
     def __setup__(cls):
         super(ShipmentOutReturn, cls).__setup__()
         # The states where amounts are cached
-        cls._states_valued_cached = ['done', 'cancel']
+        cls._states_valued_cached = ['done', 'cancelled']
 
     @classmethod
     def cancel(cls, shipments):
