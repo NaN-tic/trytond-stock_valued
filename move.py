@@ -92,7 +92,7 @@ class Move(metaclass=PoolMeta):
             shipment = move.shipment or None
 
             party = (getattr(shipment, PARTIES.get(shipment.__name__))
-                if shipment else None)
+                if shipment and PARTIES.get(shipment.__name__) else None)
             if shipment and shipment.__name__ == 'stock.shipment.internal':
                 # party is from company.party
                 party = party.party
