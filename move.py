@@ -127,7 +127,7 @@ class Move(metaclass=PoolMeta):
                 else:
                     pattern = move._get_tax_rule_pattern()
                     tax_rule = None
-                    taxes_used = None
+                    taxes_used = []
                     if shipment:
                         if shipment.__name__.startswith('stock.shipment.out'):
                             tax_rule = party and party.customer_tax_rule or None
