@@ -99,29 +99,24 @@ class ShipmentValuedMixin(TaxableMixin):
         valued_origin = config.valued_origin
 
         taxable_lines = []
-        # In case we're called from an on_change we have to use some sensible
-        # defaults
         for move in self.valued_moves:
             if move.state == 'cancelled':
                 continue
-            taxable_lines.append(tuple())
-            for attribute, default_value in [
-                    ('taxes', []),
-                    ('unit_price', Decimal(0)),
-                    ('quantity', 0.),
-                    ]:
-                if attribute == 'unit_price':
-                    origin = move.origin
-                    if isinstance(origin, Move):
-                        origin = origin.origin
-                    if valued_origin and hasattr(origin, 'unit_price'):
-                        value = origin.unit_price or move.unit_price or origin.product.list_price or _ZERO
-                    else:
-                        value = move.unit_price or move.unit_price or _ZERO
-                else:
-                    value = getattr(move, attribute, None)
-                taxable_lines[-1] += (
-                    value if value is not None else default_value,)
+
+            origin = move.origin
+            if isinstance(origin, Move):
+                origin = origin.origin
+            if valued_origin and hasattr(origin, 'unit_price'):
+                unit_price = origin.unit_price or move.unit_price or origin.product.list_price or _ZERO
+            else:
+                unit_price = move.unit_price or move.unit_price or _ZERO
+
+            taxable_lines.append((
+                    getattr(move, 'taxes', None) or [],
+                    unit_price,
+                    getattr(move, 'quantity', None) or 0,
+                    None,
+                    ))
         return taxable_lines
 
     def calc_amounts(self):
