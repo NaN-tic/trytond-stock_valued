@@ -2,10 +2,8 @@
 <!-- The COPYRIGHT file at the top level of this repository contains the full
      copyright notices and license terms. -->
 <data>
-    <xpath expr="/tree/field[@name='uom']" position="after">
-        <field name="unit_price"/>
-    </xpath>
     <xpath expr="/tree/field[@name='effective_date']" position="after">
+        <field name="unit_price"/>
         <field name="amount"/>
     </xpath>
 </data>

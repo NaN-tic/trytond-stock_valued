@@ -90,6 +90,13 @@ Create payment term::
     >>> payment_term = create_payment_term()
     >>> payment_term.save()
 
+Set Use Valued origin::
+
+    >>> Configuration = Model.get('stock.configuration')
+    >>> configuration = Configuration(1)
+    >>> configuration.valued_origin = True
+    >>> configuration.save()
+
 Purchase 5 products::
 
     >>> Purchase = Model.get('purchase.purchase')
