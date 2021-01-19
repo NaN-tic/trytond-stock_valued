@@ -107,7 +107,12 @@ class ShipmentValuedMixin(TaxableMixin):
             if isinstance(origin, Move):
                 origin = origin.origin
             if valued_origin and hasattr(origin, 'unit_price'):
-                unit_price = origin.unit_price or move.unit_price or origin.product.list_price or _ZERO
+                if origin.unit_price is not None:
+                    unit_price = origin.unit_price
+                elif move.unit_price is not None:
+                    unit_price = move.unit_price
+                else:
+                    unit_price = origin.product.list_price or _ZERO
             else:
                 unit_price = move.unit_price or move.unit_price or _ZERO
 
