@@ -133,8 +133,9 @@ class ShipmentValuedMixin(TaxableMixin):
                 for tax in taxes.values()), Decimal(0))
         return {
             'untaxed_amount': untaxed_amount,
-            'tax_amount': tax_amount,
-            'total_amount': untaxed_amount + tax_amount,
+            'tax_amount': tax_amount if untaxed_amount else Decimal(0),
+            'total_amount': (untaxed_amount + tax_amount
+                if untaxed_amount else Decimal(0)),
             }
 
     @classmethod
