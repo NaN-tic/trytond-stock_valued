@@ -35,7 +35,7 @@ class Move(metaclass=PoolMeta):
         'on_change_with_currency_digits')
     gross_unit_price = fields.Function(fields.Numeric('Gross Price',
             digits=price_digits, states=STATES, depends=['state']),
-        'get_origin_fields')
+        'get_gross_unit_price')
     amount = fields.Function(fields.Numeric('Amount',
             digits=(16, Eval('currency_digits', 2)),
             depends=['currency_digits']),
@@ -75,11 +75,10 @@ class Move(metaclass=PoolMeta):
     @classmethod
     def get_origin_fields(cls, moves, names):
         Config = Pool().get('stock.configuration')
-        config = Config(1)
 
-        result = {}
-        for fname in names:
-            result[fname] = {}
+        config = Config(1)
+        result = {n: {r.id: _ZERO for r in moves} for n in names}
+
         for move in moves:
             origin = move.origin
             if isinstance(origin, cls):
@@ -91,9 +90,6 @@ class Move(metaclass=PoolMeta):
             if shipment and shipment.__name__ == 'stock.shipment.internal':
                 # party is from company.party
                 party = party.party
-
-            for name in names:
-                result[name][move.id] = _ZERO
 
             if 'amount' in names:
                 unit_price = None
@@ -109,16 +105,6 @@ class Move(metaclass=PoolMeta):
                     if move.currency:
                         value = move.currency.round(value)
                     result['amount'][move.id] = value
-
-            if 'gross_unit_price' in names:
-                gross_unit_price = None
-                if (config.valued_origin and
-                        hasattr(origin, 'gross_unit_price')):
-                    gross_unit_price = origin.gross_unit_price
-                else:
-                    gross_unit_price = move.unit_price_w_tax
-                if gross_unit_price:
-                    result['gross_unit_price'][move.id] = gross_unit_price
 
             if 'taxes' in names:
                 taxes = []
@@ -164,11 +150,33 @@ class Move(metaclass=PoolMeta):
         return self.quantity
 
     @classmethod
-    def get_price_with_tax(cls, moves, names):
-        pool = Pool()
-        Tax = pool.get('account.tax')
-        amount_w_tax = {}
-        unit_price_w_tax = {}
+    def get_gross_unit_price(cls, moves, name):
+        Config = Pool().get('stock.configuration')
+
+        config = Config(1)
+        result = dict((x.id, _ZERO) for x in moves)
+
+        for move in moves:
+            gross_unit_price = None
+            origin = move.origin
+            if isinstance(origin, cls):
+                origin = origin.origin
+
+            if (config.valued_origin and
+                    hasattr(origin, 'gross_unit_price')):
+                gross_unit_price = origin.gross_unit_price
+            else:
+                gross_unit_price = move.unit_price_w_tax
+            if gross_unit_price:
+                result[move.id] = gross_unit_price
+
+        return result
+
+    @classmethod
+    def get_price_with_tax(cls, moves, name):
+        Tax = Pool().get('account.tax')
+
+        result = dict((x.id, _ZERO) for x in moves)
 
         def compute_amount_with_tax(move):
             tax_amount = Decimal('0.0')
@@ -181,23 +189,12 @@ class Move(metaclass=PoolMeta):
             return move.amount + tax_amount
 
         for move in moves:
-            amount = Decimal('0.0')
-            unit_price = Decimal('0.0')
-            currency = (move.sale.currency if move.sale else move.currency)
+            amount = _ZERO
+            unit_price = _ZERO
 
             if move.quantity and move.quantity != 0:
                 amount = compute_amount_with_tax(move)
                 unit_price = amount / Decimal(str(move.quantity))
 
-            if currency:
-                amount = currency.round(amount)
-            amount_w_tax[move.id] = amount
-            unit_price_w_tax[move.id] = unit_price
-
-        result = {
-            'unit_price_w_tax': unit_price_w_tax,
-            }
-        for key in result.keys():
-            if key not in names:
-                del result[key]
+            result[move.id] = unit_price
         return result
