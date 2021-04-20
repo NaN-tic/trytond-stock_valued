@@ -164,8 +164,11 @@ Sale 5 products and test it's shipment has the valued amounts::
     (Decimal('50.00'), Decimal('5.00'), Decimal('55.00'))
     >>> shipment.click('assign_try')
     True
+    >>> shipment.click('pick')
     >>> shipment.click('pack')
     >>> shipment.click('done')
+    >>> shipment.state
+    'done'
     >>> shipment.untaxed_amount, shipment.tax_amount, shipment.total_amount
     (Decimal('50.00'), Decimal('5.00'), Decimal('55.00'))
 
