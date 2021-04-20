@@ -47,7 +47,7 @@ class Move(metaclass=PoolMeta):
         digits=(16, Eval('_parent_sale', {}).get('currency_digits',
                 Eval('currency_digits', 2))),
         states=STATES,
-        depends=['currency_digits']), 'get_price_with_tax')
+        depends=['currency_digits']), 'get_origin_fields')
     discount = fields.Function(fields.Numeric('Discount',
             digits=discount_digits, states=STATES, depends=['state']),
         'get_origin_fields')
@@ -74,12 +74,25 @@ class Move(metaclass=PoolMeta):
 
     @classmethod
     def get_origin_fields(cls, moves, names):
-        Config = Pool().get('stock.configuration')
-        config = Config(1)
+        pool = Pool()
+        Config = pool.get('stock.configuration')
+        Tax = pool.get('account.tax')
 
-        result = {}
-        for fname in names:
-            result[fname] = {}
+        config = Config(1)
+        result = {n: {r.id: _ZERO for r in moves} for n in {'gross_unit_price',
+                    'amount',  'taxes', 'unit_price_w_tax', 'discount'}}
+
+        def compute_amount_with_tax(move, taxes, amount):
+            tax_amount = _ZERO
+
+            if taxes:
+                tax_list = Tax.compute(taxes,
+                    move.unit_price or Decimal('0.0'),
+                    move.quantity or 0.0)
+                tax_amount = sum([t['amount'] for t in tax_list],
+                    Decimal('0.0'))
+            return amount + tax_amount
+
         for move in moves:
             origin = move.origin
             if isinstance(origin, cls):
@@ -92,112 +105,82 @@ class Move(metaclass=PoolMeta):
                 # party is from company.party
                 party = party.party
 
-            for name in names:
-                result[name][move.id] = _ZERO
+            # amount
+            unit_price = None
+            amount = _ZERO
+            if config.valued_origin and hasattr(origin, 'unit_price'):
+                unit_price = (origin.unit_price if origin.unit_price != None
+                    else (move.unit_price or _ZERO))
+            else:
+                unit_price = (move.unit_price if move.unit_price != None
+                    else (move.unit_price or _ZERO))
+            if unit_price:
+                amount = (Decimal(
+                    str(move.get_quantity_for_value() or 0)) * (unit_price))
+                if move.currency:
+                    amount = move.currency.round(amount)
+                result['amount'][move.id] = amount
 
-            if 'amount' in names:
-                unit_price = None
-                if config.valued_origin and hasattr(origin, 'unit_price'):
-                    unit_price = (origin.unit_price if origin.unit_price != None
-                        else (move.unit_price or _ZERO))
-                else:
-                    unit_price = (move.unit_price if move.unit_price != None
-                        else (move.unit_price or _ZERO))
-                if unit_price:
-                    value = (Decimal(
-                        str(move.get_quantity_for_value() or 0)) * (unit_price))
-                    if move.currency:
-                        value = move.currency.round(value)
-                    result['amount'][move.id] = value
+            # taxes
+            taxes = []
+            if config.valued_origin and hasattr(origin, 'taxes'):
+                taxes = origin.taxes
+            else:
+                pattern = move._get_tax_rule_pattern()
+                tax_rule = None
+                taxes_used = []
+                if shipment:
+                    if shipment.__name__.startswith('stock.shipment.out'):
+                        tax_rule = party and party.customer_tax_rule or None
+                        taxes_used = (move.product.customer_taxes_used
+                            if party else [])
+                    elif shipment.__name__.startswith('stock.shipment.in'):
+                        tax_rule = party and party.supplier_tax_rule or None
+                        taxes_used = (move.product.supplier_taxes_used
+                            if party else [])
+
+                for tax in taxes_used:
+                    if tax_rule:
+                        tax_ids = tax_rule.apply(tax, pattern)
+                        if tax_ids:
+                            taxes.extend(tax_ids)
+                        continue
+                    taxes.append(tax)
+                if tax_rule:
+                    tax_ids = tax_rule.apply(None, pattern)
+                    if tax_ids:
+                        taxes.extend(Tax.browse(tax_ids))
+            if taxes:
+                result['taxes'][move.id] = [t.id for t in taxes]
+
+            # unit_price_w_tax
+            unit_price_w_tax = _ZERO
+            if move.quantity and move.quantity != 0:
+                amount_w_tax = compute_amount_with_tax(move, taxes, amount)
+                unit_price_w_tax = amount_w_tax / Decimal(str(move.quantity))
+            result['unit_price_w_tax'][move.id] = unit_price_w_tax
 
             if 'gross_unit_price' in names:
                 gross_unit_price = None
+                origin = move.origin
+                if isinstance(origin, cls):
+                    origin = origin.origin
+
                 if (config.valued_origin and
                         hasattr(origin, 'gross_unit_price')):
                     gross_unit_price = origin.gross_unit_price
                 else:
-                    gross_unit_price = move.unit_price_w_tax
+                    gross_unit_price = unit_price_w_tax
                 if gross_unit_price:
                     result['gross_unit_price'][move.id] = gross_unit_price
 
-            if 'taxes' in names:
-                taxes = []
-                if config.valued_origin and hasattr(origin, 'taxes'):
-                    taxes = [t.id for t in origin.taxes]
-                else:
-                    pattern = move._get_tax_rule_pattern()
-                    tax_rule = None
-                    taxes_used = []
-                    if shipment:
-                        if shipment.__name__.startswith('stock.shipment.out'):
-                            tax_rule = party and party.customer_tax_rule or None
-                            taxes_used = (move.product.customer_taxes_used
-                                if party else [])
-                        elif shipment.__name__.startswith('stock.shipment.in'):
-                            tax_rule = party and party.supplier_tax_rule or None
-                            taxes_used = (move.product.supplier_taxes_used
-                                if party else [])
-
-                    for tax in taxes_used:
-                        if tax_rule:
-                            tax_ids = tax_rule.apply(tax, pattern)
-                            if tax_ids:
-                                taxes.extend(tax_ids)
-                            continue
-                        taxes.append(tax.id)
-                    if tax_rule:
-                        tax_ids = tax_rule.apply(None, pattern)
-                        if tax_ids:
-                            taxes.extend(tax_ids)
-                if taxes:
-                    result['taxes'][move.id] = taxes
-
             if 'discount' in names:
+                discount = _ZERO
                 if (config.valued_origin and hasattr(origin, 'discount')):
                     discount = origin.discount
-                else:
-                    discount = Decimal(0)
                 result['discount'][move.id] = discount
+
         return result
 
     def get_quantity_for_value(self):
         return self.quantity
-
-    @classmethod
-    def get_price_with_tax(cls, moves, names):
-        pool = Pool()
-        Tax = pool.get('account.tax')
-        amount_w_tax = {}
-        unit_price_w_tax = {}
-
-        def compute_amount_with_tax(move):
-            tax_amount = Decimal('0.0')
-            if move.taxes:
-                tax_list = Tax.compute(move.taxes,
-                    move.unit_price or Decimal('0.0'),
-                    move.quantity or 0.0)
-                tax_amount = sum([t['amount'] for t in tax_list],
-                    Decimal('0.0'))
-            return move.amount + tax_amount
-
-        for move in moves:
-            amount = Decimal('0.0')
-            unit_price = Decimal('0.0')
-            currency = (move.sale.currency if move.sale else move.currency)
-
-            if move.quantity and move.quantity != 0:
-                amount = compute_amount_with_tax(move)
-                unit_price = amount / Decimal(str(move.quantity))
-
-            if currency:
-                amount = currency.round(amount)
-            amount_w_tax[move.id] = amount
-            unit_price_w_tax[move.id] = unit_price
-
-        result = {
-            'unit_price_w_tax': unit_price_w_tax,
-            }
-        for key in result.keys():
-            if key not in names:
-                del result[key]
-        return result
