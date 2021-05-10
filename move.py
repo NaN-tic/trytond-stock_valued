@@ -143,7 +143,7 @@ class Move(metaclass=PoolMeta):
                     if tax_rule:
                         tax_ids = tax_rule.apply(tax, pattern)
                         if tax_ids:
-                            taxes.extend(tax_ids)
+                            taxes.extend(Tax.browse(tax_ids))
                         continue
                     taxes.append(tax)
                 if tax_rule:
