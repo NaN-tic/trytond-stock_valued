@@ -11,7 +11,7 @@ try:
     from trytond.modules.account_invoice_discount import discount_digits
 except ImportError:
     discount_digits = price_digits
-
+from trytond.modules.currency.fields import Monetary
 
 __all__ = ['Move']
 
@@ -19,6 +19,7 @@ _ZERO = Decimal('0.0')
 STATES = {
     'invisible': Not(Equal(Eval('state', ''), 'done')),
     }
+DEPENDS = ['state']
 PARTIES = {
     'stock.shipment.in': 'supplier',
     'stock.shipment.in.return': 'supplier',
@@ -30,41 +31,19 @@ PARTIES = {
 
 class Move(metaclass=PoolMeta):
     __name__ = 'stock.move'
-
-    currency_digits = fields.Function(fields.Integer('Currency Digits'),
-        'on_change_with_currency_digits')
-    gross_unit_price = fields.Function(fields.Numeric('Gross Price',
-            digits=price_digits, states=STATES, depends=['state']),
+    gross_unit_price = fields.Function(Monetary('Gross Price',
+        digits=price_digits, currency='currency', states=STATES, depends=DEPENDS),
         'get_origin_fields')
-    amount = fields.Function(fields.Numeric('Amount',
-            digits=(16, Eval('currency_digits', 2)),
-            depends=['currency_digits']),
-        'get_origin_fields')
+    amount = fields.Function(Monetary('Amount',
+        digits='currency', currency='currency'), 'get_origin_fields')
     taxes = fields.Function(fields.Many2Many('account.tax', None, None,
-            'Taxes'),
+        'Taxes'), 'get_origin_fields')
+    unit_price_w_tax = fields.Function(Monetary('Unit Price with Tax',
+        digits='currency', currency='currency', states=STATES, depends=DEPENDS),
         'get_origin_fields')
-    unit_price_w_tax = fields.Function(fields.Numeric('Unit Price with Tax',
-        digits=(16, Eval('_parent_sale', {}).get('currency_digits',
-                Eval('currency_digits', 2))),
-        states=STATES,
-        depends=['currency_digits']), 'get_origin_fields')
-    discount = fields.Function(fields.Numeric('Discount',
-            digits=discount_digits, states=STATES, depends=['state']),
+    discount = fields.Function(Monetary('Discount',
+        digits=discount_digits, states=STATES, depends=DEPENDS),
         'get_origin_fields')
-
-    @staticmethod
-    def default_currency_digits():
-        Company = Pool().get('company.company')
-        if Transaction().context.get('company'):
-            company = Company(Transaction().context['company'])
-            return company.currency.digits
-        return 2
-
-    @fields.depends('currency')
-    def on_change_with_currency_digits(self, name=None):
-        if self.currency:
-            return self.currency.digits
-        return 2
 
     def _get_tax_rule_pattern(self):
         '''

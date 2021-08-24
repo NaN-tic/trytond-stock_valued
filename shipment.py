@@ -6,6 +6,7 @@ from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Eval
 from trytond.modules.account.tax import TaxableMixin
+from trytond.modules.currency.fields import Monetary
 
 __all__ = ['ShipmentIn', 'ShipmentOut', 'ShipmentOutReturn']
 
@@ -26,33 +27,19 @@ _ZERO = Decimal('0.0')
 
 class ShipmentValuedMixin(TaxableMixin):
     currency = fields.Function(fields.Many2One('currency.currency',
-            'Currency'),
-        'on_change_with_currency')
-    currency_digits = fields.Function(fields.Integer('Currency Digits'),
-        'on_change_with_currency_digits')
-    untaxed_amount_cache = fields.Numeric('Untaxed Cache',
-        digits=(16, Eval('currency_digits', 2)),
-        readonly=True,
-        depends=['currency_digits'])
-    tax_amount_cache = fields.Numeric('Tax Cache',
-        digits=(16, Eval('currency_digits', 2)),
-        readonly=True,
-        depends=['currency_digits'])
-    total_amount_cache = fields.Numeric('Total Cache',
-        digits=(16, Eval('currency_digits', 2)),
-        readonly=True,
-        depends=['currency_digits'])
-    untaxed_amount = fields.Function(fields.Numeric('Untaxed',
-        digits=(16, Eval('currency_digits', 2)),
-        depends=['currency_digits']), 'get_amounts')
-    tax_amount = fields.Function(fields.Numeric('Tax',
-        digits=(16, Eval('currency_digits', 2)),
-        readonly=True,
-        depends=['currency_digits']), 'get_amounts')
-    total_amount = fields.Function(fields.Numeric('Total',
-        digits=(16, Eval('currency_digits', 2)),
-        readonly=True,
-        depends=['currency_digits']), 'get_amounts')
+        'Currency'), 'on_change_with_currency')
+    untaxed_amount_cache = Monetary('Untaxed Cache',
+        digits='currency', currency='currency', readonly=True)
+    tax_amount_cache = Monetary('Tax Cache',
+        digits='currency', currency='currency', readonly=True)
+    total_amount_cache = Monetary('Total Cache',
+        digits='currency', currency='currency', readonly=True)
+    untaxed_amount = fields.Function(Monetary('Untaxed',
+        digits='currency', currency='currency'), 'get_amounts')
+    tax_amount = fields.Function(Monetary('Tax',
+        digits='currency', currency='currency'), 'get_amounts')
+    total_amount = fields.Function(Monetary('Total',
+        digits='currency', currency='currency'), 'get_amounts')
 
     @fields.depends('company')
     def on_change_with_currency(self, name=None):
@@ -65,12 +52,6 @@ class ShipmentValuedMixin(TaxableMixin):
         if currency_id is None and self.company:
             currency_id = self.company.currency.id
         return currency_id
-
-    @fields.depends('company')
-    def on_change_with_currency_digits(self, name=None):
-        if self.company:
-            return self.company.currency.digits
-        return 2
 
     @property
     def valued_moves(self):

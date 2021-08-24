@@ -10,10 +10,6 @@ msgctxt "field:stock.move,amount:"
 msgid "Amount"
 msgstr "Importe"
 
-msgctxt "field:stock.move,currency_digits:"
-msgid "Currency Digits"
-msgstr "Decimales de la moneda"
-
 msgctxt "field:stock.move,discount:"
 msgid "Discount"
 msgstr "Descuento"
@@ -33,10 +29,6 @@ msgstr "Precio unidad imp. incl."
 msgctxt "field:stock.shipment.in,currency:"
 msgid "Currency"
 msgstr "Moneda"
-
-msgctxt "field:stock.shipment.in,currency_digits:"
-msgid "Currency Digits"
-msgstr "Decimales de la moneda"
 
 msgctxt "field:stock.shipment.in,tax_amount:"
 msgid "Tax"
@@ -65,10 +57,6 @@ msgstr "Base imponible precalculado"
 msgctxt "field:stock.shipment.out,currency:"
 msgid "Currency"
 msgstr "Moneda"
-
-msgctxt "field:stock.shipment.out,currency_digits:"
-msgid "Currency Digits"
-msgstr "Decimales de la moneda"
 
 msgctxt "field:stock.shipment.out,tax_amount:"
 msgid "Tax"
