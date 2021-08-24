@@ -4,7 +4,6 @@ from decimal import Decimal
 from trytond import backend
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
-from trytond.pyson import Eval
 from trytond.modules.account.tax import TaxableMixin
 from trytond.modules.currency.fields import Monetary
 
