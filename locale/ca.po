@@ -87,3 +87,7 @@ msgid ""
 "If marked valued shipment take amount from origin, not from the move"
 msgstr ""
 "Si està marcat l'albarà valorat usarà els imports del origen, no del moviment"
+
+msgctxt "view:stock.shipment.out:"
+msgid "These totals are calculated using the outgoing moves."
+msgstr "Aquests totals estan calculats utilitzant els moviments de sortida."

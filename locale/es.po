@@ -88,3 +88,7 @@ msgid ""
 msgstr ""
 "Si está marcado el albarán valorado usará los importes del origen, "
 "no del movimiento"
+
+msgctxt "view:stock.shipment.out:"
+msgid "These totals are calculated using the outgoing moves."
+msgstr "Estos totales están calculados utilizando los movimientos de salida."

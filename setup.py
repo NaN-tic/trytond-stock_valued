@@ -78,7 +78,7 @@ tests_require = [
     get_require_version('proteus'),
     get_require_version('trytond_sale'),
     get_require_version('trytond_purchase'),
-    
+
     ]
 tests_require += get_requires('extras_depend')
 requires += [get_require_version('trytond_account_invoice'),get_require_version('trytond_stock')]
