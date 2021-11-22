@@ -80,7 +80,7 @@ class ShipmentValuedMixin(TaxableMixin):
         keep_origin = True if 'stock.move' in origins else False
         move_field = MOVES.get(self.__name__)
         if (keep_origin and self.__name__ == 'stock.shipment.out'):
-            moves = getattr(self, 'inventory_moves', [])
+            moves = getattr(self, 'outgoing_moves', [])
             if moves:
                 return moves
         return getattr(self, move_field, [])
