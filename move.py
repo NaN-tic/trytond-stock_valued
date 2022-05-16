@@ -4,6 +4,7 @@ from decimal import Decimal
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Equal, Eval, Not
+from trytond.transaction import Transaction
 from trytond.modules.product import price_digits
 try:
     from trytond.modules.account_invoice_discount import discount_digits
@@ -49,6 +50,14 @@ class Move(metaclass=PoolMeta):
         '''
         return {}
 
+    @property
+    def tax_date(self):
+        "Date to use when computing the tax"
+        pool = Pool()
+        Date = pool.get('ir.date')
+        with Transaction().set_context(company=self.company.id):
+            return Date.today()
+
     @classmethod
     def get_origin_fields(cls, moves, names):
         pool = Pool()
@@ -65,7 +74,7 @@ class Move(metaclass=PoolMeta):
             if taxes:
                 tax_list = Tax.compute(taxes,
                     move.unit_price or Decimal('0.0'),
-                    move.quantity or 0.0)
+                    move.quantity or 0.0, move.tax_date)
                 tax_amount = sum([t['amount'] for t in tax_list],
                     Decimal('0.0'))
             return amount + tax_amount
