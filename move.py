@@ -170,7 +170,7 @@ class Move(metaclass=PoolMeta):
                         hasattr(origin, 'gross_unit_price')):
                     gross_unit_price = origin.gross_unit_price
                 else:
-                    gross_unit_price = origin.unit_price
+                    gross_unit_price = unit_price
                 if gross_unit_price:
                     result['gross_unit_price'][move.id] = gross_unit_price
 

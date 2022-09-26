@@ -256,4 +256,4 @@ Create Internal Shipment::
     >>> shipment.save()
     >>> move, = shipment.moves
     >>> move.amount, move.unit_price_w_tax, move.gross_unit_price
-    (Decimal('1.00'), Decimal('1.10'), Decimal('1.10'))
+    (Decimal('1.00'), Decimal('1.10'), Decimal('1'))
