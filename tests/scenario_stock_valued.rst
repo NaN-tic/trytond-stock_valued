@@ -109,6 +109,7 @@ Purchase 5 products::
     >>> purchase.lines.append(purchase_line)
     >>> purchase_line.product = product
     >>> purchase_line.quantity = 5.0
+    >>> purchase_line.unit_price = product.cost_price
     >>> purchase.click('quote')
     >>> purchase.click('confirm')
     >>> purchase.click('process')
@@ -180,7 +181,7 @@ Create Supplier Shipment::
     >>> incoming_move = Move()
     >>> shipment.incoming_moves.append(incoming_move)
     >>> incoming_move.product = product
-    >>> incoming_move.uom = unit
+    >>> incoming_move.unit = unit
     >>> incoming_move.quantity = 1
     >>> incoming_move.from_location = supplier_loc
     >>> incoming_move.to_location = shipment.warehouse.input_location
@@ -200,7 +201,7 @@ Create Customer Shipment::
     >>> outgoing_move = Move()
     >>> shipment.outgoing_moves.append(outgoing_move)
     >>> outgoing_move.product = product
-    >>> outgoing_move.uom = unit
+    >>> outgoing_move.unit = unit
     >>> outgoing_move.quantity = 1
     >>> outgoing_move.from_location = shipment.warehouse.output_location
     >>> outgoing_move.to_location = customer_loc
@@ -219,7 +220,7 @@ Create Customer Return Shipment::
     >>> incoming_move = Move()
     >>> shipment.incoming_moves.append(incoming_move)
     >>> incoming_move.product = product
-    >>> incoming_move.uom = unit
+    >>> incoming_move.unit = unit
     >>> incoming_move.quantity = 1
     >>> incoming_move.from_location = customer_loc
     >>> incoming_move.to_location = shipment.warehouse.input_location
@@ -245,7 +246,7 @@ Create Internal Shipment::
     >>> move = Move()
     >>> shipment.moves.append(move)
     >>> move.product = product
-    >>> move.uom = unit
+    >>> move.unit = unit
     >>> move.quantity = 1
     >>> move.from_location = storage_location
     >>> move.to_location = new_loc
