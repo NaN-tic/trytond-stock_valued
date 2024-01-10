@@ -18,7 +18,6 @@ _ZERO = Decimal('0.0')
 STATES = {
     'invisible': Not(Equal(Eval('state', ''), 'done')),
     }
-DEPENDS = ['state']
 PARTIES = {
     'stock.shipment.in': 'supplier',
     'stock.shipment.in.return': 'supplier',
@@ -31,17 +30,17 @@ PARTIES = {
 class Move(metaclass=PoolMeta):
     __name__ = 'stock.move'
     gross_unit_price = fields.Function(Monetary('Gross Price',
-        digits=price_digits, currency='currency', states=STATES, depends=DEPENDS),
+        digits=price_digits, currency='currency', states=STATES),
         'get_origin_fields')
     amount = fields.Function(Monetary('Amount',
         digits='currency', currency='currency'), 'get_origin_fields')
     taxes = fields.Function(fields.Many2Many('account.tax', None, None,
         'Taxes'), 'get_origin_fields')
     unit_price_w_tax = fields.Function(Monetary('Unit Price with Tax',
-        digits='currency', currency='currency', states=STATES, depends=DEPENDS),
+        digits='currency', currency='currency', states=STATES),
         'get_origin_fields')
     discount = fields.Function(Monetary('Discount',
-        digits=discount_digits, states=STATES, depends=DEPENDS),
+        digits=discount_digits, states=STATES),
         'get_origin_fields')
 
     def _get_tax_rule_pattern(self):
