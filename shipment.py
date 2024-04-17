@@ -190,8 +190,8 @@ class ShipmentIn(ShipmentValuedMixin, metaclass=PoolMeta):
         cls.store_cache(shipments)
 
     @classmethod
-    def done(cls, shipments):
-        super(ShipmentIn, cls).done(shipments)
+    def do(cls, shipments):
+        super(ShipmentIn, cls).do(shipments)
         cls.store_cache(shipments)
 
 
@@ -221,8 +221,8 @@ class ShipmentOut(ShipmentValuedMixin, metaclass=PoolMeta):
         cls.store_cache(shipments)
 
     @classmethod
-    def done(cls, shipments):
-        super(ShipmentOut, cls).done(shipments)
+    def do(cls, shipments):
+        super(ShipmentOut, cls).do(shipments)
         cls.store_cache(shipments)
 
 
@@ -241,6 +241,6 @@ class ShipmentOutReturn(ShipmentValuedMixin, metaclass=PoolMeta):
         cls.store_cache(shipments)
 
     @classmethod
-    def done(cls, shipments):
-        super(ShipmentOutReturn, cls).done(shipments)
+    def do(cls, shipments):
+        super(ShipmentOutReturn, cls).do(shipments)
         cls.store_cache(shipments)
