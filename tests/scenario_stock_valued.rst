@@ -135,7 +135,7 @@ Create Supplier Shipment from purchase::
     >>> shipment.untaxed_amount, shipment.tax_amount, shipment.total_amount
     (Decimal('25.00'), Decimal('2.50'), Decimal('27.50'))
     >>> shipment.click('receive')
-    >>> shipment.click('done')
+    >>> shipment.click('do')
     >>> shipment.untaxed_amount, shipment.tax_amount, shipment.total_amount
     (Decimal('25.00'), Decimal('2.50'), Decimal('27.50'))
     >>> len(purchase.shipments), len(purchase.shipment_returns)
@@ -166,7 +166,7 @@ Sale 5 products and test it's shipment has the valued amounts::
     >>> shipment.click('assign_try')
     >>> shipment.click('pick')
     >>> shipment.click('pack')
-    >>> shipment.click('done')
+    >>> shipment.click('do')
     >>> shipment.state
     'done'
     >>> shipment.untaxed_amount, shipment.tax_amount, shipment.total_amount
