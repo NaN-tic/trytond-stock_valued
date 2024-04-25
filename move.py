@@ -136,7 +136,7 @@ class Move(metaclass=PoolMeta):
                     if tax_ids:
                         taxes.extend(Tax.browse(tax_ids))
             if taxes:
-                result['taxes'][move.id] = [t.id for t in taxes]
+                result['taxes'][move.id] = list(set([t.id for t in taxes]))
 
             # unit_price_w_tax
             unit_price_w_tax = _ZERO
