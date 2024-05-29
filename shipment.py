@@ -21,7 +21,7 @@ TAX_TYPE = {
     'stock.shipment.out': 'invoice',
     'stock.shipment.out.return': 'credit_note',
     }
-_ZERO = Decimal('0.0')
+_ZERO = Decimal(0)
 
 
 class ShipmentValuedMixin(TaxableMixin):

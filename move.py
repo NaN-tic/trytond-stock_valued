@@ -14,7 +14,7 @@ from trytond.modules.currency.fields import Monetary
 
 __all__ = ['Move']
 
-_ZERO = Decimal('0.0')
+_ZERO = Decimal(0)
 STATES = {
     'invisible': Not(Equal(Eval('state', ''), 'done')),
     }
@@ -72,10 +72,10 @@ class Move(metaclass=PoolMeta):
 
             if taxes:
                 tax_list = Tax.compute(taxes,
-                    move.unit_price or Decimal('0.0'),
+                    move.unit_price or Decimal(0),
                     move.quantity or 0.0, move.tax_date)
                 tax_amount = sum([t['amount'] for t in tax_list],
-                    Decimal('0.0'))
+                    Decimal(0))
             return amount + tax_amount
 
         for move in moves:
