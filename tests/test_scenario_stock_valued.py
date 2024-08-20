@@ -239,6 +239,7 @@ class Test(unittest.TestCase):
         new_loc.parent = storage_location
         new_loc.type = 'storage'
         new_loc.save()
+
         ShipmentInternal = Model.get('stock.shipment.internal')
         shipment = ShipmentInternal()
         shipment.from_location = storage_location
@@ -251,10 +252,8 @@ class Test(unittest.TestCase):
         move.from_location = storage_location
         move.to_location = new_loc
         move.company = company
-        move.unit_price = Decimal('1')
-        move.currency = company.currency
         shipment.save()
         move, = shipment.moves
-        self.assertEqual(move.amount, Decimal('1.00'))
-        self.assertEqual(move.unit_price_w_tax, Decimal('1.10'))
-        self.assertEqual(move.gross_unit_price, Decimal('1'))
+        self.assertEqual(move.amount, Decimal('0'))
+        self.assertEqual(move.unit_price_w_tax, Decimal('0'))
+        self.assertEqual(move.gross_unit_price, Decimal('0'))
