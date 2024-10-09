@@ -3,7 +3,6 @@
 from trytond.pool import Pool
 from . import move
 from . import shipment
-from . import configuration
 
 
 def register():
@@ -12,5 +11,4 @@ def register():
         shipment.ShipmentIn,
         shipment.ShipmentOut,
         shipment.ShipmentOutReturn,
-        configuration.Configuration,
         module='stock_valued', type_='model')
