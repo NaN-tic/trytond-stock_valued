@@ -11,8 +11,6 @@ except ImportError:
     discount_digits = price_digits
 from trytond.modules.currency.fields import Monetary
 
-__all__ = ['Move']
-
 _ZERO = Decimal(0)
 STATES = {
     'invisible': Not(Equal(Eval('state', ''), 'done')),
