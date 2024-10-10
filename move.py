@@ -56,7 +56,6 @@ class Move(metaclass=PoolMeta):
     amount = fields.Function(Monetary('Amount', digits='currency',
         currency='currency'), 'on_change_with_amount')
 
-
     @classmethod
     def __register__(cls, module_name):
         # Rename gross_unit_price to base_price
@@ -141,4 +140,3 @@ class Move(metaclass=PoolMeta):
         if self.currency:
             amount = self.currency.round(amount)
         return amount
-

@@ -1,16 +1,19 @@
-from decimal import Decimal
 import unittest
+from decimal import Decimal
+
 from proteus import Model
-from trytond.modules.company.tests.tools import create_company, get_company
 from trytond.modules.account.tests.tools import (create_chart,
-    create_fiscalyear, create_tax, get_accounts)
+                                                 create_fiscalyear, create_tax,
+                                                 get_accounts)
 from trytond.modules.account_invoice.tests.tools import (
-    set_fiscalyear_invoice_sequences)
-from trytond.tests.tools import activate_modules
+    create_payment_term, set_fiscalyear_invoice_sequences)
+from trytond.modules.company.tests.tools import create_company, get_company
 from trytond.tests.test_tryton import drop_db
+from trytond.tests.tools import activate_modules
 
 
 class Test(unittest.TestCase):
+
     def setUp(self):
         drop_db()
         super().setUp()
@@ -19,12 +22,13 @@ class Test(unittest.TestCase):
         drop_db()
         super().tearDown()
 
-    def test_module(self):
+    def test(self):
+
         # Install stock_value, sale and purchase Modules
         activate_modules(['stock_valued', 'sale', 'purchase'])
 
         # Create company
-        create_company()
+        _ = create_company()
         company = get_company()
 
         # Create fiscal year
@@ -33,7 +37,7 @@ class Test(unittest.TestCase):
         fiscalyear.click('create_period')
 
         # Create chart of accounts
-        create_chart(company)
+        _ = create_chart(company)
         accounts = get_accounts(company)
         revenue = accounts['revenue']
         expense = accounts['expense']
@@ -78,10 +82,15 @@ class Test(unittest.TestCase):
         template.save()
         product, = template.products
 
+        # Create payment term
+        payment_term = create_payment_term()
+        payment_term.save()
+
         # Purchase 5 products
         Purchase = Model.get('purchase.purchase')
         purchase = Purchase()
         purchase.party = supplier
+        purchase.payment_term = payment_term
         purchase.invoice_method = 'order'
         purchase_line = purchase.lines.new()
         purchase.lines.append(purchase_line)
@@ -124,6 +133,7 @@ class Test(unittest.TestCase):
         Sale = Model.get('sale.sale')
         sale = Sale()
         sale.party = customer
+        sale.payment_term = payment_term
         sale.invoice_method = 'order'
         sale_line = sale.lines.new()
         sale_line.product = product
@@ -211,7 +221,6 @@ class Test(unittest.TestCase):
         self.assertEqual(shipment.tax_amount, Decimal('0.10'))
         self.assertEqual(shipment.total_amount, Decimal('1.10'))
 
-
         # Create Internal Shipment
         storage_location, = Location.find([('type', '=', 'storage')], limit=1)
         new_loc = Location()
@@ -219,6 +228,7 @@ class Test(unittest.TestCase):
         new_loc.parent = storage_location
         new_loc.type = 'storage'
         new_loc.save()
+
         ShipmentInternal = Model.get('stock.shipment.internal')
         shipment = ShipmentInternal()
         shipment.from_location = storage_location
@@ -238,4 +248,3 @@ class Test(unittest.TestCase):
         self.assertEqual(move.base_price, Decimal('1'))
         self.assertEqual(move.amount, Decimal('1.00'))
         self.assertEqual(move.unit_price_w_tax, Decimal('1.10'))
-
