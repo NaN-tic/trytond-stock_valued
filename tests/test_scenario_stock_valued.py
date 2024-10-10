@@ -248,3 +248,8 @@ class Test(unittest.TestCase):
         self.assertEqual(move.base_price, Decimal('1'))
         self.assertEqual(move.amount, Decimal('1.00'))
         self.assertEqual(move.unit_price_w_tax, Decimal('1.10'))
+        shipment.save()
+        move, = shipment.moves
+        self.assertEqual(move.amount, Decimal('0'))
+        self.assertEqual(move.unit_price_w_tax, Decimal('0'))
+        self.assertEqual(move.gross_unit_price, Decimal('0'))
