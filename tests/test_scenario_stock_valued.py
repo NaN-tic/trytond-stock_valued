@@ -86,20 +86,13 @@ class Test(unittest.TestCase):
         payment_term = create_payment_term()
         payment_term.save()
 
-        # Set Use Valued origin
-        Configuration = Model.get('stock.configuration')
-        configuration = Configuration(1)
-        configuration.valued_origin = True
-        configuration.save()
-
         # Purchase 5 products
         Purchase = Model.get('purchase.purchase')
-        PurchaseLine = Model.get('purchase.line')
         purchase = Purchase()
         purchase.party = supplier
         purchase.payment_term = payment_term
         purchase.invoice_method = 'order'
-        purchase_line = PurchaseLine()
+        purchase_line = purchase.lines.new()
         purchase.lines.append(purchase_line)
         purchase_line.product = product
         purchase_line.quantity = 5.0
@@ -120,17 +113,14 @@ class Test(unittest.TestCase):
         ShipmentIn = Model.get('stock.shipment.in')
         shipment = ShipmentIn()
         shipment.supplier = supplier
-
         for move in purchase.moves:
             incoming_move = Move(id=move.id)
             shipment.incoming_moves.append(incoming_move)
-
         shipment.save()
         self.assertEqual(shipment.origins, purchase.rec_name)
         self.assertEqual(shipment.untaxed_amount, Decimal('25.00'))
         self.assertEqual(shipment.tax_amount, Decimal('2.50'))
         self.assertEqual(shipment.total_amount, Decimal('27.50'))
-
         shipment.click('receive')
         shipment.click('do')
         self.assertEqual(shipment.untaxed_amount, Decimal('25.00'))
@@ -138,6 +128,10 @@ class Test(unittest.TestCase):
         self.assertEqual(shipment.total_amount, Decimal('27.50'))
         self.assertEqual(len(purchase.shipments), 1)
         self.assertEqual(len(purchase.shipment_returns), 0)
+        move, = shipment.incoming_moves
+        self.assertEqual(move.amount, Decimal('25.00'))
+        self.assertEqual(move.base_price, None)
+        self.assertEqual(len(move.taxes), 1)
 
         # Sale 5 products and test it's shipment has the valued amounts
         Sale = Model.get('sale.sale')
@@ -158,12 +152,10 @@ class Test(unittest.TestCase):
         self.assertEqual(len(sale.shipments), 1)
         self.assertEqual(len(sale.shipment_returns), 0)
         self.assertEqual(len(sale.invoices), 1)
-
         shipment, = sale.shipments
         self.assertEqual(shipment.untaxed_amount, Decimal('50.00'))
         self.assertEqual(shipment.tax_amount, Decimal('5.00'))
         self.assertEqual(shipment.total_amount, Decimal('55.00'))
-
         shipment.click('assign_try')
         shipment.click('pick')
         shipment.click('pack')
@@ -172,6 +164,10 @@ class Test(unittest.TestCase):
         self.assertEqual(shipment.untaxed_amount, Decimal('50.00'))
         self.assertEqual(shipment.tax_amount, Decimal('5.00'))
         self.assertEqual(shipment.total_amount, Decimal('55.00'))
+        move, = shipment.outgoing_moves
+        self.assertEqual(move.amount, Decimal('50.00'))
+        self.assertEqual(move.base_price, None)
+        self.assertEqual(len(move.taxes), 1)
 
         # Create Supplier Shipment
         Location = Model.get('stock.location')
@@ -190,8 +186,13 @@ class Test(unittest.TestCase):
         incoming_move.currency = company.currency
         shipment.save()
         self.assertEqual(shipment.untaxed_amount, Decimal('1.00'))
-        self.assertEqual(shipment.tax_amount, Decimal('0.10'))
-        self.assertEqual(shipment.total_amount, Decimal('1.10'))
+        # incoming move has not origin; not taxes
+        self.assertEqual(shipment.tax_amount, Decimal('0'))
+        self.assertEqual(shipment.total_amount, Decimal('1.00'))
+        move, = shipment.incoming_moves
+        self.assertEqual(move.amount, Decimal('1.00'))
+        self.assertEqual(move.base_price, None)
+        self.assertEqual(len(move.taxes), 0)
 
         # Create Customer Shipment
         ShipmentOut = Model.get('stock.shipment.out')
@@ -210,8 +211,13 @@ class Test(unittest.TestCase):
         outgoing_move.currency = company.currency
         shipment.save()
         self.assertEqual(shipment.untaxed_amount, Decimal('1.00'))
-        self.assertEqual(shipment.tax_amount, Decimal('0.10'))
-        self.assertEqual(shipment.total_amount, Decimal('1.10'))
+        # outgoing_move has not origin; not taxes
+        self.assertEqual(shipment.tax_amount, Decimal('0'))
+        self.assertEqual(shipment.total_amount, Decimal('1.00'))
+        move, = shipment.outgoing_moves
+        self.assertEqual(move.amount, Decimal('1.00'))
+        self.assertEqual(move.base_price, None)
+        self.assertEqual(len(move.taxes), 0)
 
         # Create Customer Return Shipment
         ShipmentOutReturn = Model.get('stock.shipment.out.return')
@@ -229,8 +235,13 @@ class Test(unittest.TestCase):
         incoming_move.currency = company.currency
         shipment.save()
         self.assertEqual(shipment.untaxed_amount, Decimal('1.00'))
-        self.assertEqual(shipment.tax_amount, Decimal('0.10'))
-        self.assertEqual(shipment.total_amount, Decimal('1.10'))
+        # incoming move has not origin; not taxes
+        self.assertEqual(shipment.tax_amount, Decimal('0'))
+        self.assertEqual(shipment.total_amount, Decimal('1.00'))
+        move, = shipment.incoming_moves
+        self.assertEqual(move.amount, Decimal('1.00'))
+        self.assertEqual(move.base_price, None)
+        self.assertEqual(len(move.taxes), 0)
 
         # Create Internal Shipment
         storage_location, = Location.find([('type', '=', 'storage')], limit=1)
@@ -255,5 +266,4 @@ class Test(unittest.TestCase):
         shipment.save()
         move, = shipment.moves
         self.assertEqual(move.amount, Decimal('0'))
-        self.assertEqual(move.unit_price_w_tax, Decimal('0'))
-        self.assertEqual(move.gross_unit_price, Decimal('0'))
+        self.assertEqual(move.base_price, None)
