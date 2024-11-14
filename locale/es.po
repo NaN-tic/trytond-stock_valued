@@ -14,9 +14,9 @@ msgctxt "field:stock.move,discount:"
 msgid "Discount"
 msgstr "Descuento"
 
-msgctxt "field:stock.move,gross_unit_price:"
-msgid "Gross Price"
-msgstr "Precio bruto"
+msgctxt "field:stock.move,base_price:"
+msgid "Base Price"
+msgstr "Precio base"
 
 msgctxt "field:stock.move,taxes:"
 msgid "Taxes"

@@ -29,7 +29,7 @@ PARTIES = {
 
 class Move(metaclass=PoolMeta):
     __name__ = 'stock.move'
-    gross_unit_price = fields.Function(Monetary('Gross Price',
+    base_price = fields.Function(Monetary('Base Price',
         digits=price_digits, currency='currency', states=STATES),
         'get_origin_fields')
     amount = fields.Function(Monetary('Amount',
@@ -64,7 +64,7 @@ class Move(metaclass=PoolMeta):
         Tax = pool.get('account.tax')
 
         config = Config(1)
-        result = {n: {r.id: _ZERO for r in moves} for n in {'gross_unit_price',
+        result = {n: {r.id: _ZERO for r in moves} for n in {'base_price',
                     'amount',  'taxes', 'unit_price_w_tax', 'discount'}}
 
         def compute_amount_with_tax(move, taxes, amount):
@@ -145,24 +145,24 @@ class Move(metaclass=PoolMeta):
                 unit_price_w_tax = amount_w_tax / Decimal(str(move.quantity))
             result['unit_price_w_tax'][move.id] = unit_price_w_tax
 
-            if 'gross_unit_price' in names:
-                gross_unit_price = None
+            if 'base_price' in names:
+                base_price = None
                 origin = move.origin
                 if isinstance(origin, cls):
                     origin = origin.origin
 
                 if (config.valued_origin and
-                        hasattr(origin, 'gross_unit_price')):
-                    gross_unit_price = origin.gross_unit_price
+                        hasattr(origin, 'base_price')):
+                    base_price = origin.base_price
                 else:
-                    gross_unit_price = unit_price
-                if gross_unit_price:
-                    result['gross_unit_price'][move.id] = gross_unit_price
+                    base_price = unit_price
+                if base_price:
+                    result['base_price'][move.id] = base_price
 
             if 'discount' in names:
                 discount = _ZERO
-                if (config.valued_origin and hasattr(origin, 'discount')):
-                    discount = origin.discount
+                if (config.valued_origin and hasattr(origin, 'discount_rate')):
+                    discount = origin.discount_rate or origin.discount_amount or _ZERO
                 result['discount'][move.id] = discount
 
         return result
