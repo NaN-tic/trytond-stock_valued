@@ -54,14 +54,6 @@ class Move(metaclass=PoolMeta):
     amount = fields.Function(Monetary('Amount', digits='currency',
         currency='currency'), 'on_change_with_amount')
 
-    @classmethod
-    def __register__(cls, module_name):
-        # Rename gross_unit_price to base_price
-        table = cls.__table_handler__(module_name)
-        if table.column_exist('gross_unit_price') and not table.column_exist('base_price'):
-            table.column_rename('gross_unit_price', 'base_price')
-        super().__register__(module_name)
-
     @fields.depends('unit_price', 'base_price')
     def on_change_with_discount_rate(self, name=None):
         if self.unit_price is None or not self.base_price:
