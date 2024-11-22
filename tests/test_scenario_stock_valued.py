@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
     def test(self):
 
         # Install stock_value, sale and purchase Modules
-        activate_modules(['stock_valued', 'sale', 'purchase'])
+        activate_modules(['stock_valued', 'sale', 'purchase', 'sale_discount'])
 
         # Create company
         _ = create_company()
@@ -142,32 +142,40 @@ class Test(unittest.TestCase):
         sale_line = sale.lines.new()
         sale_line.product = product
         sale_line.quantity = 5.0
+        sale_line.discount_rate = Decimal('0.10')
+        self.assertEqual(sale_line.base_price, Decimal('10.00'))
+        self.assertEqual(sale_line.unit_price, Decimal('9.00'))
+        self.assertEqual(sale_line.amount, Decimal('45.00'))
         sale.click('quote')
         sale.click('confirm')
         sale.click('process')
-        self.assertEqual(sale.untaxed_amount, Decimal('50.00'))
-        self.assertEqual(sale.tax_amount, Decimal('5.00'))
-        self.assertEqual(sale.total_amount, Decimal('55.00'))
+        self.assertEqual(sale.untaxed_amount, Decimal('45.00'))
+        self.assertEqual(sale.tax_amount, Decimal('4.50'))
+        self.assertEqual(sale.total_amount, Decimal('49.50'))
         self.assertEqual(sale.state, 'processing')
         self.assertEqual(len(sale.shipments), 1)
         self.assertEqual(len(sale.shipment_returns), 0)
         self.assertEqual(len(sale.invoices), 1)
+
         shipment, = sale.shipments
-        self.assertEqual(shipment.untaxed_amount, Decimal('50.00'))
-        self.assertEqual(shipment.tax_amount, Decimal('5.00'))
-        self.assertEqual(shipment.total_amount, Decimal('55.00'))
+        self.assertEqual(shipment.untaxed_amount, Decimal('45.00'))
+        self.assertEqual(shipment.tax_amount, Decimal('4.50'))
+        self.assertEqual(shipment.total_amount, Decimal('49.50'))
+        line, = sale.lines
+        move, = shipment.outgoing_moves
+        self.assertEqual(move.amount, line.amount)
+        self.assertEqual(move.unit_price, line.unit_price)
+        self.assertEqual(move.unit_price_w_tax, Decimal('9.90'))
+        self.assertEqual(move.base_price, line.base_price)
+        self.assertEqual(move.discount, line.discount_rate)
         shipment.click('assign_try')
         shipment.click('pick')
         shipment.click('pack')
         shipment.click('do')
         self.assertEqual(shipment.state, 'done')
-        self.assertEqual(shipment.untaxed_amount, Decimal('50.00'))
-        self.assertEqual(shipment.tax_amount, Decimal('5.00'))
-        self.assertEqual(shipment.total_amount, Decimal('55.00'))
-        move, = shipment.outgoing_moves
-        self.assertEqual(move.amount, Decimal('50.00'))
-        self.assertEqual(move.base_price, None)
-        self.assertEqual(len(move.taxes), 1)
+        self.assertEqual(shipment.untaxed_amount, Decimal('45.00'))
+        self.assertEqual(shipment.tax_amount, Decimal('4.50'))
+        self.assertEqual(shipment.total_amount, Decimal('49.50'))
 
         # Create Supplier Shipment
         Location = Model.get('stock.location')
@@ -211,13 +219,14 @@ class Test(unittest.TestCase):
         outgoing_move.currency = company.currency
         shipment.save()
         self.assertEqual(shipment.untaxed_amount, Decimal('1.00'))
-        # outgoing_move has not origin; not taxes
-        self.assertEqual(shipment.tax_amount, Decimal('0'))
-        self.assertEqual(shipment.total_amount, Decimal('1.00'))
+        self.assertEqual(shipment.tax_amount, Decimal('0.10'))
+        self.assertEqual(shipment.total_amount, Decimal('1.10'))
         move, = shipment.outgoing_moves
         self.assertEqual(move.amount, Decimal('1.00'))
-        self.assertEqual(move.base_price, None)
-        self.assertEqual(len(move.taxes), 0)
+        self.assertEqual(move.unit_price, Decimal('1.00'))
+        self.assertEqual(move.unit_price_w_tax, Decimal('1.10'))
+        self.assertEqual(move.base_price, Decimal('1.00'))
+        self.assertEqual(move.discount, Decimal('0.00'))
 
         # Create Customer Return Shipment
         ShipmentOutReturn = Model.get('stock.shipment.out.return')
@@ -266,4 +275,5 @@ class Test(unittest.TestCase):
         shipment.save()
         move, = shipment.moves
         self.assertEqual(move.amount, Decimal('0'))
-        self.assertEqual(move.base_price, None)
+        self.assertEqual(move.unit_price_w_tax, Decimal('0'))
+        self.assertEqual(move.base_price, Decimal('0'))

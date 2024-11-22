@@ -26,7 +26,6 @@ class Move(metaclass=PoolMeta):
             'invisible': ~Eval('unit_price_required'),
             'readonly': Eval('state') != 'draft',
             })
-
     discount_rate = fields.Function(fields.Numeric(
             "Discount Rate", digits=(16, 4),
             states={
@@ -41,14 +40,12 @@ class Move(metaclass=PoolMeta):
                 'readonly': Eval('state') != 'draft',
                 }),
         'on_change_with_discount_amount', setter='set_discount_amount')
-
     discount = fields.Function(fields.Char(
             "Discount",
             states={
                 'invisible': ~Eval('discount'),
                 }),
         'on_change_with_discount')
-
     taxes = fields.Function(fields.Many2Many('account.tax', None, None,
         'Taxes'), 'get_taxes')
     amount = fields.Function(Monetary('Amount', digits='currency',
