@@ -11,3 +11,13 @@ class PurchaseLineDiscount(metaclass=PoolMeta):
         if move:
             move.base_price = self.base_price
         return move
+
+
+class PurchaseLineDiscountFormula(metaclass=PoolMeta):
+    __name__ = 'purchase.line'
+
+    def get_move(self, move_type):
+        move = super().get_move(move_type)
+        if move:
+            move.discount_formula = self.discount_formula
+        return move

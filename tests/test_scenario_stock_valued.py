@@ -99,7 +99,7 @@ class Test(unittest.TestCase):
         purchase_line.quantity = 5.0
         purchase_line.base_price = product.cost_price
         purchase_line.discount_rate = Decimal('0.10')
-        purchase_line.unit_price = Decimal('4.5000')
+        self.assertEqual(purchase_line.unit_price, Decimal('4.5000'))
         self.assertEqual(len(purchase_line.taxes), 1)
         purchase.click('quote')
         purchase.click('confirm')

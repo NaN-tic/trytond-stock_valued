@@ -11,3 +11,13 @@ class SaleLineDiscount(metaclass=PoolMeta):
         if move:
             move.base_price = self.base_price
         return move
+
+
+class SaleLineDiscountFormula(metaclass=PoolMeta):
+    __name__ = 'sale.line'
+
+    def get_move(self, shipment_type):
+        move = super().get_move(shipment_type)
+        if move:
+            move.discount_formula = self.discount_formula
+        return move

@@ -10,6 +10,7 @@ try:
 except ImportError:
     discount_digits = price_digits
 from trytond.modules.currency.fields import Monetary
+from trytond.modules.discount_formula.discount import DiscountMixin
 
 _ZERO = Decimal(0)
 STATES = {
@@ -127,3 +128,7 @@ class Move(metaclass=PoolMeta):
         if self.currency:
             amount = self.currency.round(amount)
         return amount
+
+
+class MoveDiscountFormula(DiscountMixin, metaclass=PoolMeta):
+    __name__ = 'stock.move'

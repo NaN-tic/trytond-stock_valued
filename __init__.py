@@ -21,3 +21,15 @@ def register():
         purchase.PurchaseLineDiscount,
         depends=['purchase_discount'],
         module='stock_valued', type_='model')
+    Pool.register(
+        move.MoveDiscountFormula,
+        depends=['discount_formula'],
+        module='stock_valued', type_='model')
+    Pool.register(
+        purchase.PurchaseLineDiscountFormula,
+        depends=['discount_formula', 'purchase_discount'],
+        module='stock_valued', type_='model')
+    Pool.register(
+        sale.SaleLineDiscountFormula,
+        depends=['discount_formula', 'sale_discount'],
+        module='stock_valued', type_='model')
