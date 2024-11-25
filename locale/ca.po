@@ -2,29 +2,33 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
 
-msgctxt "field:stock.configuration,valued_origin:"
-msgid "Use Valued origin"
-msgstr "Usar import dels origens"
-
 msgctxt "field:stock.move,amount:"
 msgid "Amount"
 msgstr "Import"
-
-msgctxt "field:stock.move,discount:"
-msgid "Discount"
-msgstr "Descompte"
 
 msgctxt "field:stock.move,base_price:"
 msgid "Base Price"
 msgstr "Preu base"
 
+msgctxt "field:stock.move,discount:"
+msgid "Discount"
+msgstr "Descompte"
+
+msgctxt "field:stock.move,discount_amount:"
+msgid "Discount Amount"
+msgstr "Import de descompte"
+
+msgctxt "field:stock.move,discount_formula:"
+msgid "Discount Formula"
+msgstr "Fórmula de descompte"
+
+msgctxt "field:stock.move,discount_rate:"
+msgid "Discount Rate"
+msgstr "Taxa de descompte"
+
 msgctxt "field:stock.move,taxes:"
 msgid "Taxes"
 msgstr "Impostos"
-
-msgctxt "field:stock.move,unit_price_w_tax:"
-msgid "Unit Price with Tax"
-msgstr "Preu unitat imp. incl."
 
 msgctxt "field:stock.shipment.in,currency:"
 msgid "Currency"
@@ -82,11 +86,41 @@ msgctxt "field:stock.shipment.out,untaxed_amount_cache:"
 msgid "Untaxed Cache"
 msgstr "Base imposable precalculat"
 
-msgctxt "help:stock.configuration,valued_origin:"
-msgid ""
-"If marked valued shipment take amount from origin, not from the move"
-msgstr ""
-"Si està marcat l'albarà valorat usarà els imports del origen, no del moviment"
+msgctxt "field:stock.shipment.out.return,currency:"
+msgid "Currency"
+msgstr "Moneda"
+
+msgctxt "field:stock.shipment.out.return,tax_amount:"
+msgid "Tax"
+msgstr "Impost"
+
+msgctxt "field:stock.shipment.out.return,tax_amount_cache:"
+msgid "Tax Cache"
+msgstr "Memòria cau  impost"
+
+msgctxt "field:stock.shipment.out.return,total_amount:"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "field:stock.shipment.out.return,total_amount_cache:"
+msgid "Total Cache"
+msgstr "Total precalculat"
+
+msgctxt "field:stock.shipment.out.return,untaxed_amount:"
+msgid "Untaxed"
+msgstr "Sense impostos"
+
+msgctxt "field:stock.shipment.out.return,untaxed_amount_cache:"
+msgid "Untaxed Cache"
+msgstr "Base imposable precalculat"
+
+msgctxt "view:stock.move:"
+msgid "%"
+msgstr "%"
+
+msgctxt "view:stock.move:"
+msgid "Discount"
+msgstr "Descompte"
 
 msgctxt "view:stock.shipment.out:"
 msgid "These totals are calculated using the outgoing moves."
