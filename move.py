@@ -52,6 +52,14 @@ class Move(metaclass=PoolMeta):
     amount = fields.Function(Monetary('Amount', digits='currency',
         currency='currency'), 'on_change_with_amount')
 
+    @classmethod
+    def view_attributes(cls):
+        return super().view_attributes() + [
+            ('//label[@id="discount"]', 'states', {
+                'invisible': ~Eval('unit_price_required'),
+                }),
+            ]
+
     @fields.depends('unit_price', 'base_price')
     def on_change_with_discount_rate(self, name=None):
         if self.unit_price is None or not self.base_price:
