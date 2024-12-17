@@ -4,168 +4,139 @@ from decimal import Decimal
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Equal, Eval, Not
-from trytond.transaction import Transaction
-from trytond.modules.product import price_digits
+from trytond.modules.product import price_digits, round_price
 try:
     from trytond.modules.account_invoice_discount import discount_digits
 except ImportError:
     discount_digits = price_digits
 from trytond.modules.currency.fields import Monetary
-
-__all__ = ['Move']
+from trytond.modules.discount_formula.discount import DiscountMixin
 
 _ZERO = Decimal(0)
 STATES = {
     'invisible': Not(Equal(Eval('state', ''), 'done')),
     }
-PARTIES = {
-    'stock.shipment.in': 'supplier',
-    'stock.shipment.in.return': 'supplier',
-    'stock.shipment.out': 'customer',
-    'stock.shipment.out.return': 'customer',
-    'stock.shipment.internal': 'company',
-    }
 
 
 class Move(metaclass=PoolMeta):
     __name__ = 'stock.move'
-    base_price = fields.Function(Monetary('Base Price',
-        digits=price_digits, currency='currency', states=STATES),
-        'get_origin_fields')
-    amount = fields.Function(Monetary('Amount',
-        digits='currency', currency='currency'), 'get_origin_fields')
+
+    base_price = Monetary(
+        "Base Price", currency='currency', digits=price_digits,
+        states={
+            'invisible': ~Eval('unit_price_required'),
+            'readonly': Eval('state') != 'draft',
+            })
+    discount_rate = fields.Function(fields.Numeric(
+            "Discount Rate", digits=(16, 4),
+            states={
+                'invisible': ~Eval('unit_price_required'),
+                'readonly': Eval('state') != 'draft',
+                }),
+        'on_change_with_discount_rate', setter='set_discount_rate')
+    discount_amount = fields.Function(Monetary(
+            "Discount Amount", currency='currency', digits=price_digits,
+            states={
+                'invisible': ~Eval('unit_price_required'),
+                'readonly': Eval('state') != 'draft',
+                }),
+        'on_change_with_discount_amount', setter='set_discount_amount')
+    discount = fields.Function(fields.Char(
+            "Discount",
+            states={
+                'invisible': ~Eval('discount'),
+                }),
+        'on_change_with_discount')
     taxes = fields.Function(fields.Many2Many('account.tax', None, None,
-        'Taxes'), 'get_origin_fields')
-    unit_price_w_tax = fields.Function(Monetary('Unit Price with Tax',
-        digits='currency', currency='currency', states=STATES),
-        'get_origin_fields')
-    discount = fields.Function(Monetary('Discount',
-        digits=discount_digits, states=STATES),
-        'get_origin_fields')
-
-    def _get_tax_rule_pattern(self):
-        '''
-        Get tax rule pattern
-        '''
-        return {}
-
-    @property
-    def tax_date(self):
-        "Date to use when computing the tax"
-        pool = Pool()
-        Date = pool.get('ir.date')
-        with Transaction().set_context(company=self.company.id):
-            return Date.today()
+        'Taxes'), 'get_taxes')
+    amount = fields.Function(Monetary('Amount', digits='currency',
+        currency='currency'), 'on_change_with_amount')
 
     @classmethod
-    def get_origin_fields(cls, moves, names):
+    def view_attributes(cls):
+        return super().view_attributes() + [
+            ('//label[@id="discount"]', 'states', {
+                'invisible': ~Eval('unit_price_required'),
+                }),
+            ]
+
+    @fields.depends('unit_price', 'base_price')
+    def on_change_with_discount_rate(self, name=None):
+        if self.unit_price is None or not self.base_price:
+            return
+        rate = 1 - self.unit_price / self.base_price
+        return rate.quantize(
+            Decimal(1) / 10 ** self.__class__.discount_rate.digits[1])
+
+    @fields.depends(
+        'base_price', 'discount_rate',
+        methods=['on_change_with_discount_amount', 'on_change_with_discount',
+            'on_change_with_amount'])
+    def on_change_discount_rate(self):
+        if self.base_price is not None and self.discount_rate is not None:
+            self.unit_price = round_price(
+                self.base_price * (1 - self.discount_rate))
+            self.discount_amount = self.on_change_with_discount_amount()
+            self.discount = self.on_change_with_discount()
+            self.amount = self.on_change_with_amount()
+
+    @classmethod
+    def set_discount_rate(cls, lines, name, value):
+        pass
+
+    @fields.depends('unit_price', 'base_price')
+    def on_change_with_discount_amount(self, name=None):
+        if self.unit_price is None or self.base_price is None:
+            return
+        return round_price(self.base_price - self.unit_price)
+
+    @fields.depends(
+        'base_price', 'discount_amount',
+        methods=['on_change_with_discount_rate', 'on_change_with_discount',
+            'on_change_with_amount'])
+    def on_change_discount_amount(self):
+        if self.base_price is not None and self.discount_amount is not None:
+            self.unit_price = round_price(
+                self.base_price - self.discount_amount)
+            self.discount_rate = self.on_change_with_discount_rate()
+            self.discount = self.on_change_with_discount()
+            self.amount = self.on_change_with_amount()
+
+    @classmethod
+    def set_discount_amount(cls, lines, name, value):
+        pass
+
+    @fields.depends('currency',
+        methods=[
+            'on_change_with_discount_rate', 'on_change_with_discount_amount'])
+    def on_change_with_discount(self, name=None):
         pool = Pool()
-        Config = pool.get('stock.configuration')
-        Tax = pool.get('account.tax')
+        Lang = pool.get('ir.lang')
+        lang = Lang.get()
+        rate = self.on_change_with_discount_rate()
+        if not rate or rate % Decimal('0.01'):
+            amount = self.on_change_with_discount_amount()
+            if amount:
+                return lang.currency(
+                    amount, self.currency, digits=price_digits[1])
+        else:
+            return lang.format('%i', rate * 100) + '%'
 
-        config = Config(1)
-        result = {n: {r.id: _ZERO for r in moves} for n in {'base_price',
-                    'amount',  'taxes', 'unit_price_w_tax', 'discount'}}
+    def get_taxes(self, name):
+        taxes = []
+        if self.origin and hasattr(self.origin, 'taxes'):
+            for tax in self.origin.taxes:
+                taxes.append(tax.id)
+        return taxes
 
-        def compute_amount_with_tax(move, taxes, amount):
-            tax_amount = _ZERO
+    @fields.depends('quantity', 'unit_price', 'currency')
+    def on_change_with_amount(self, name=None):
+        amount = (Decimal(str(self.quantity or 0))
+            * (self.unit_price or Decimal(0)))
+        if self.currency:
+            amount = self.currency.round(amount)
+        return amount
 
-            if taxes:
-                tax_list = Tax.compute(taxes,
-                    move.unit_price or Decimal(0),
-                    move.quantity or 0.0, move.tax_date)
-                tax_amount = sum([t['amount'] for t in tax_list],
-                    Decimal(0))
-            return amount + tax_amount
 
-        for move in moves:
-            origin = move.origin
-            if isinstance(origin, cls):
-                origin = origin.origin
-            shipment = move.shipment or None
-
-            party = (getattr(shipment, PARTIES.get(shipment.__name__))
-                if shipment and PARTIES.get(shipment.__name__) else None)
-            if shipment and shipment.__name__ == 'stock.shipment.internal':
-                # party is from company.party
-                party = party.party
-
-            # amount
-            unit_price = None
-            amount = _ZERO
-            if config.valued_origin and hasattr(origin, 'unit_price'):
-                unit_price = (origin.unit_price if origin.unit_price != None
-                    else (move.unit_price or _ZERO))
-            else:
-                unit_price = (move.unit_price if move.unit_price != None
-                    else (move.unit_price or _ZERO))
-            if unit_price:
-                amount = (Decimal(
-                    str(move.get_quantity_for_value() or 0)) * (unit_price))
-                if move.currency:
-                    amount = move.currency.round(amount)
-                result['amount'][move.id] = amount
-
-            # taxes
-            taxes = []
-            if config.valued_origin and hasattr(origin, 'taxes'):
-                taxes = origin.taxes
-            else:
-                pattern = move._get_tax_rule_pattern()
-                tax_rule = None
-                taxes_used = []
-                if shipment:
-                    if shipment.__name__.startswith('stock.shipment.out'):
-                        tax_rule = party and party.customer_tax_rule or None
-                        taxes_used = (move.product.customer_taxes_used
-                            if party else [])
-                    elif shipment.__name__.startswith('stock.shipment.in'):
-                        tax_rule = party and party.supplier_tax_rule or None
-                        taxes_used = (move.product.supplier_taxes_used
-                            if party else [])
-
-                for tax in taxes_used:
-                    if tax_rule:
-                        tax_ids = tax_rule.apply(tax, pattern)
-                        if tax_ids:
-                            taxes.extend(Tax.browse(tax_ids))
-                        continue
-                    taxes.append(tax)
-                if tax_rule:
-                    tax_ids = tax_rule.apply(None, pattern)
-                    if tax_ids:
-                        taxes.extend(Tax.browse(tax_ids))
-            if taxes:
-                result['taxes'][move.id] = list(set([t.id for t in taxes]))
-
-            # unit_price_w_tax
-            unit_price_w_tax = _ZERO
-            if move.quantity and move.quantity != 0:
-                amount_w_tax = compute_amount_with_tax(move, taxes, amount)
-                unit_price_w_tax = amount_w_tax / Decimal(str(move.quantity))
-            result['unit_price_w_tax'][move.id] = unit_price_w_tax
-
-            if 'base_price' in names:
-                base_price = None
-                origin = move.origin
-                if isinstance(origin, cls):
-                    origin = origin.origin
-
-                if (config.valued_origin and
-                        hasattr(origin, 'base_price')):
-                    base_price = origin.base_price
-                else:
-                    base_price = unit_price
-                if base_price:
-                    result['base_price'][move.id] = base_price
-
-            if 'discount' in names:
-                discount = _ZERO
-                if (config.valued_origin and hasattr(origin, 'discount_rate')):
-                    discount = origin.discount_rate or origin.discount_amount or _ZERO
-                result['discount'][move.id] = discount
-
-        return result
-
-    def get_quantity_for_value(self):
-        return self.quantity
+class MoveDiscountFormula(DiscountMixin, metaclass=PoolMeta):
+    __name__ = 'stock.move'

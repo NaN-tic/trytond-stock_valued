@@ -3,8 +3,8 @@
 from trytond.pool import Pool
 from . import move
 from . import shipment
-from . import configuration
-
+from . import sale
+from . import purchase
 
 def register():
     Pool.register(
@@ -12,5 +12,24 @@ def register():
         shipment.ShipmentIn,
         shipment.ShipmentOut,
         shipment.ShipmentOutReturn,
-        configuration.Configuration,
+        module='stock_valued', type_='model')
+    Pool.register(
+        sale.SaleLineDiscount,
+        depends=['sale_discount'],
+        module='stock_valued', type_='model')
+    Pool.register(
+        purchase.PurchaseLineDiscount,
+        depends=['purchase_discount'],
+        module='stock_valued', type_='model')
+    Pool.register(
+        move.MoveDiscountFormula,
+        depends=['discount_formula'],
+        module='stock_valued', type_='model')
+    Pool.register(
+        purchase.PurchaseLineDiscountFormula,
+        depends=['discount_formula', 'purchase_discount'],
+        module='stock_valued', type_='model')
+    Pool.register(
+        sale.SaleLineDiscountFormula,
+        depends=['discount_formula', 'sale_discount'],
         module='stock_valued', type_='model')

@@ -43,17 +43,15 @@ class ShipmentValuedMixin(TaxableMixin):
     @fields.depends('company')
     def on_change_with_currency(self, name=None):
         currency_id = None
-        if self.valued_moves:
-            for move in self.valued_moves:
-                if move.currency:
-                    currency_id = move.currency.id
-                    break
+        for move in self.get_valued_moves():
+            if move.currency:
+                currency_id = move.currency.id
+                break
         if currency_id is None and self.company:
             currency_id = self.company.currency.id
         return currency_id
 
-    @property
-    def valued_moves(self):
+    def get_valued_moves(self):
         Move = Pool().get('stock.move')
 
         origins = Move._get_origin()
@@ -72,21 +70,17 @@ class ShipmentValuedMixin(TaxableMixin):
     @property
     def taxable_lines(self):
         pool = Pool()
-        Config = pool.get('stock.configuration')
         Move = pool.get('stock.move')
 
-        config = Config(1)
-        valued_origin = config.valued_origin
-
         taxable_lines = []
-        for move in self.valued_moves:
+        for move in self.get_valued_moves():
             if move.state == 'cancelled':
                 continue
 
             origin = move.origin
             if isinstance(origin, Move):
                 origin = origin.origin
-            if valued_origin and hasattr(origin, 'unit_price'):
+            if origin and hasattr(origin, 'unit_price'):
                 if origin.unit_price is not None:
                     unit_price = origin.unit_price
                 elif move.unit_price is not None:
@@ -104,8 +98,8 @@ class ShipmentValuedMixin(TaxableMixin):
                     ))
         return taxable_lines
 
-    def calc_amounts(self):
-        untaxed_amount = sum((m.amount for m in self.valued_moves if m.amount),
+    def compute_amounts(self):
+        untaxed_amount = sum((m.amount for m in self.get_valued_moves() if m.amount),
             Decimal(0))
         taxes = self._get_taxes()
         untaxed_amount = self.company.currency.round(untaxed_amount)
@@ -120,27 +114,38 @@ class ShipmentValuedMixin(TaxableMixin):
 
     @classmethod
     def get_amounts(cls, shipments, names):
-        untaxed_amount = dict((i.id, Decimal(0)) for i in shipments)
-        tax_amount = dict((i.id, Decimal(0)) for i in shipments)
-        total_amount = dict((i.id, Decimal(0)) for i in shipments)
+        untaxed_amounts = dict((i.id, Decimal(0)) for i in shipments)
+        tax_amounts = dict((i.id, Decimal(0)) for i in shipments)
+        total_amounts = dict((i.id, Decimal(0)) for i in shipments)
 
         for shipment in shipments:
             if (shipment.state in cls._states_valued_cached
                     and shipment.untaxed_amount_cache is not None
                     and shipment.tax_amount_cache is not None
                     and shipment.total_amount_cache is not None):
-                untaxed_amount[shipment.id] = shipment.untaxed_amount_cache
-                tax_amount[shipment.id] = shipment.tax_amount_cache
-                total_amount[shipment.id] = shipment.total_amount_cache
+
+                untaxed_amounts[shipment.id] = shipment.untaxed_amount_cache
+                tax_amounts[shipment.id] = shipment.tax_amount_cache
+                total_amounts[shipment.id] = shipment.total_amount_cache
             else:
-                res = shipment.calc_amounts()
-                untaxed_amount[shipment.id] = res['untaxed_amount']
-                tax_amount[shipment.id] = res['tax_amount']
-                total_amount[shipment.id] = res['total_amount']
+                untaxed_amount = sum((m.amount for m in shipment.get_valued_moves() if m.amount),
+                    Decimal(0))
+                taxes = shipment._get_taxes()
+                untaxed_amount = shipment.company.currency.round(untaxed_amount)
+                if untaxed_amount:
+                    tax_amount = sum((shipment.company.currency.round(tax['amount'])
+                            for tax in taxes.values()), Decimal(0))
+                    total_amount = untaxed_amount + tax_amount
+                else:
+                    tax_amount = Decimal(0)
+                    total_amount = Decimal(0)
+                untaxed_amounts[shipment.id] = untaxed_amount
+                tax_amounts[shipment.id] = tax_amount
+                total_amounts[shipment.id] = total_amount
         result = {
-            'untaxed_amount': untaxed_amount,
-            'tax_amount': tax_amount,
-            'total_amount': total_amount,
+            'untaxed_amount': untaxed_amounts,
+            'tax_amount': tax_amounts,
+            'total_amount': total_amounts,
             }
         for key in list(result.keys()):
             if key not in names:
