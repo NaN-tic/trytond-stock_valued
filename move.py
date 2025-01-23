@@ -5,10 +5,6 @@ from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Equal, Eval, Not
 from trytond.modules.product import price_digits, round_price
-try:
-    from trytond.modules.account_invoice_discount import discount_digits
-except ImportError:
-    discount_digits = price_digits
 from trytond.modules.currency.fields import Monetary
 from trytond.modules.discount_formula.discount import DiscountMixin
 
