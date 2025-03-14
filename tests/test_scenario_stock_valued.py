@@ -125,13 +125,7 @@ class Test(unittest.TestCase):
         self.assertEqual(shipment.untaxed_amount, purchase.untaxed_amount)
         self.assertEqual(shipment.tax_amount, purchase.tax_amount)
         self.assertEqual(shipment.total_amount, purchase.total_amount)
-        shipment.click('receive')
-        shipment.click('do')
-        self.assertEqual(shipment.untaxed_amount, purchase.untaxed_amount)
-        self.assertEqual(shipment.tax_amount, purchase.tax_amount)
-        self.assertEqual(shipment.total_amount, purchase.total_amount)
-        self.assertEqual(len(purchase.shipments), 1)
-        self.assertEqual(len(purchase.shipment_returns), 0)
+
         move, = shipment.incoming_moves
         line, = purchase.lines
         self.assertEqual(move.amount, line.amount)
@@ -140,6 +134,22 @@ class Test(unittest.TestCase):
         self.assertEqual(move.discount_rate, line.discount_rate)
         self.assertEqual(move.discount, line.discount)
         self.assertEqual(len(move.taxes), 1)
+
+        # change unit_price incoming moves and shipment valued not equal to purchase
+        move.unit_price = Decimal('4.1200')
+        move.save()
+        shipment.reload()
+        self.assertNotEqual(shipment.untaxed_amount, purchase.untaxed_amount)
+        self.assertNotEqual(shipment.tax_amount, purchase.tax_amount)
+        self.assertNotEqual(shipment.total_amount, purchase.total_amount)
+
+        shipment.click('receive')
+        shipment.click('do')
+        self.assertEqual(shipment.untaxed_amount, Decimal('20.60'))
+        self.assertEqual(shipment.tax_amount, Decimal('2.06'))
+        self.assertEqual(shipment.total_amount, Decimal('22.66'))
+        self.assertEqual(len(purchase.shipments), 1)
+        self.assertEqual(len(purchase.shipment_returns), 0)
 
         # Sale 5 products and test it's shipment has the valued amounts
         Sale = Model.get('sale.sale')
