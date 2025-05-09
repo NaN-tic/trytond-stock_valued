@@ -112,7 +112,7 @@ class Move(metaclass=PoolMeta):
         rate = self.on_change_with_discount_rate()
         if not rate or rate % Decimal('0.01'):
             amount = self.on_change_with_discount_amount()
-            if amount:
+            if amount and self.currency:
                 return lang.currency(
                     amount, self.currency, digits=price_digits[1])
         else:
