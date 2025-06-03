@@ -120,7 +120,7 @@ class Move(metaclass=PoolMeta):
 
     def get_taxes(self, name):
         taxes = []
-        if self.origin and hasattr(self.origin, 'taxes'):
+        if self.origin and self.origin != self and hasattr(self.origin, 'taxes'):
             for tax in self.origin.taxes:
                 taxes.append(tax.id)
         return taxes
