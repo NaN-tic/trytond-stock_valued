@@ -101,7 +101,7 @@ class ShipmentValuedMixin(TaxableMixin):
             Decimal(0))
         taxes = self._get_taxes()
         untaxed_amount = self.company.currency.round(untaxed_amount)
-        tax_amount = sum((self.company.currency.round(tax['amount'])
+        tax_amount = sum((self.company.currency.round(tax.amount)
                 for tax in taxes.values()), Decimal(0))
         return {
             'untaxed_amount': untaxed_amount,
@@ -131,7 +131,7 @@ class ShipmentValuedMixin(TaxableMixin):
                 taxes = shipment._get_taxes()
                 untaxed_amount = shipment.company.currency.round(untaxed_amount)
                 if untaxed_amount:
-                    tax_amount = sum((shipment.company.currency.round(tax['amount'])
+                    tax_amount = sum((shipment.company.currency.round(tax.amount)
                             for tax in taxes.values()), Decimal(0))
                     total_amount = untaxed_amount + tax_amount
                 else:
