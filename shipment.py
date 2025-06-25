@@ -97,8 +97,8 @@ class ShipmentValuedMixin(TaxableMixin):
         return taxable_lines
 
     def compute_amounts(self):
-        untaxed_amount = sum((m.amount for m in self.get_valued_moves() if m.amount),
-            Decimal(0))
+        untaxed_amount = sum((m.amount for m in self.get_valued_moves()
+            if m.amount and m.state != 'cancelled'), Decimal(0))
         taxes = self._get_taxes()
         untaxed_amount = self.company.currency.round(untaxed_amount)
         tax_amount = sum((self.company.currency.round(tax['amount'])
@@ -126,8 +126,8 @@ class ShipmentValuedMixin(TaxableMixin):
                 tax_amounts[shipment.id] = shipment.tax_amount_cache
                 total_amounts[shipment.id] = shipment.total_amount_cache
             else:
-                untaxed_amount = sum((m.amount for m in shipment.get_valued_moves() if m.amount),
-                    Decimal(0))
+                untaxed_amount = sum((m.amount for m in shipment.get_valued_moves()
+                    if m.amount and m.state != 'cancelled'), Decimal(0))
                 taxes = shipment._get_taxes()
                 untaxed_amount = shipment.company.currency.round(untaxed_amount)
                 if untaxed_amount:
