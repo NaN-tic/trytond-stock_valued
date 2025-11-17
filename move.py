@@ -123,6 +123,9 @@ class Move(metaclass=PoolMeta):
         if self.origin and self.origin != self and hasattr(self.origin, 'taxes'):
             for tax in self.origin.taxes:
                 taxes.append(tax.id)
+        elif self.product and self.from_location.type == 'supplier':
+            for tax in self.product.supplier_taxes_used:
+                taxes.append(tax.id)
         return taxes
 
     @fields.depends('quantity', 'unit_price', 'currency')
