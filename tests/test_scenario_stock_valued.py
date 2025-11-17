@@ -214,13 +214,13 @@ class Test(unittest.TestCase):
         incoming_move.currency = company.currency
         shipment.save()
         self.assertEqual(shipment.untaxed_amount, Decimal('1.00'))
-        # incoming move has not origin; not taxes
-        self.assertEqual(shipment.tax_amount, Decimal('0'))
-        self.assertEqual(shipment.total_amount, Decimal('1.00'))
+        # incoming move has not origin; product taxes
+        self.assertEqual(shipment.tax_amount, Decimal('0.10'))
+        self.assertEqual(shipment.total_amount, Decimal('1.10'))
         move, = shipment.incoming_moves
-        self.assertEqual(move.amount, Decimal('1.00'))
+        self.assertEqual(move.amount, Decimal('1.0'))
         self.assertEqual(move.base_price, None)
-        self.assertEqual(len(move.taxes), 0)
+        self.assertEqual(len(move.taxes), 1)
 
         # Create Customer Shipment
         ShipmentOut = Model.get('stock.shipment.out')

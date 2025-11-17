@@ -209,12 +209,13 @@ class Test(unittest.TestCase):
         incoming_move.currency = company.currency
         shipment.save()
         self.assertEqual(shipment.untaxed_amount, Decimal('0.90'))
-        # incoming move has not origin; not taxes
-        self.assertEqual(shipment.tax_amount, Decimal('0'))
-        self.assertEqual(shipment.total_amount, Decimal('0.90'))
+
+        # incoming move has not origin; product taxes
+        self.assertEqual(shipment.tax_amount, Decimal('0.09'))
+        self.assertEqual(shipment.total_amount, Decimal('0.99'))
         move, = shipment.incoming_moves
         self.assertEqual(move.amount, Decimal('0.90'))
         self.assertEqual(move.base_price, Decimal('1'))
         self.assertEqual(move.discount_rate, Decimal('0.1000'))
         self.assertEqual(move.discount, '10%')
-        self.assertEqual(len(move.taxes), 0)
+        self.assertEqual(len(move.taxes), 1)
