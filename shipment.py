@@ -1,7 +1,6 @@
 # The COPYRIGHT file at the top level of this repository contains the full
 # copyright notices and license terms.
 from decimal import Decimal
-from trytond import backend
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 from trytond.modules.account.tax import TaxableMixin
@@ -178,7 +177,7 @@ class ShipmentIn(ShipmentValuedMixin, metaclass=PoolMeta):
 
     @classmethod
     def __register__(cls, module_name):
-        table = backend.TableHandler(cls, module_name)
+        table = cls.__table_handler__(module_name)
 
         if table.column_exist('untaxed_amount'):
             table.column_rename('untaxed_amount', 'untaxed_amount_cache')
@@ -209,7 +208,7 @@ class ShipmentOut(ShipmentValuedMixin, metaclass=PoolMeta):
 
     @classmethod
     def __register__(cls, module_name):
-        table = backend.TableHandler(cls, module_name)
+        table = cls.__table_handler__(module_name)
 
         if table.column_exist('untaxed_amount'):
             table.column_rename('untaxed_amount', 'untaxed_amount_cache')
