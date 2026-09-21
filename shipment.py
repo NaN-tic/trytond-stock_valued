@@ -1,7 +1,7 @@
 # The COPYRIGHT file at the top level of this repository contains the full
 # copyright notices and license terms.
 from decimal import Decimal
-from trytond.model import fields
+from trytond.model import ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.modules.account.tax import TaxableMixin
 from trytond.modules.currency.fields import Monetary
@@ -187,6 +187,7 @@ class ShipmentIn(ShipmentValuedMixin, metaclass=PoolMeta):
         super(ShipmentIn, cls).__register__(module_name)
 
     @classmethod
+    @ModelView.button
     def cancel(cls, shipments):
         super(ShipmentIn, cls).cancel(shipments)
         cls.store_cache(shipments)
@@ -218,11 +219,13 @@ class ShipmentOut(ShipmentValuedMixin, metaclass=PoolMeta):
         super(ShipmentOut, cls).__register__(module_name)
 
     @classmethod
+    @ModelView.button
     def cancel(cls, shipments):
         super(ShipmentOut, cls).cancel(shipments)
         cls.store_cache(shipments)
 
     @classmethod
+    @ModelView.button
     def do(cls, shipments):
         super(ShipmentOut, cls).do(shipments)
         cls.store_cache(shipments)
@@ -238,11 +241,13 @@ class ShipmentOutReturn(ShipmentValuedMixin, metaclass=PoolMeta):
         cls._states_valued_cached = ['done', 'cancelled']
 
     @classmethod
+    @ModelView.button
     def cancel(cls, shipments):
         super(ShipmentOutReturn, cls).cancel(shipments)
         cls.store_cache(shipments)
 
     @classmethod
+    @ModelView.button
     def do(cls, shipments):
         super(ShipmentOutReturn, cls).do(shipments)
         cls.store_cache(shipments)
