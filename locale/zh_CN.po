@@ -1,0 +1,132 @@
+#
+msgid ""
+msgstr ""
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgctxt "field:stock.move,amount:"
+msgid "Amount"
+msgstr "数额"
+
+msgctxt "field:stock.move,base_price:"
+msgid "Base Price"
+msgstr "基准价格"
+
+msgctxt "field:stock.move,discount:"
+msgid "Discount"
+msgstr "折扣"
+
+msgctxt "field:stock.move,discount_amount:"
+msgid "Discount Amount"
+msgstr "折扣金额"
+
+msgctxt "field:stock.move,discount_formula:"
+msgid "Discount Formula"
+msgstr "折扣公式"
+
+msgctxt "field:stock.move,discount_rate:"
+msgid "Discount Rate"
+msgstr "折扣率"
+
+msgctxt "field:stock.move,taxes:"
+msgid "Taxes"
+msgstr "税"
+
+msgctxt "field:stock.shipment.in,currency:"
+msgid "Currency"
+msgstr "货币"
+
+msgctxt "field:stock.shipment.in,tax_amount:"
+msgid "Tax"
+msgstr "税"
+
+msgctxt "field:stock.shipment.in,tax_amount_cache:"
+msgid "Tax Cache"
+msgstr "税缓存"
+
+msgctxt "field:stock.shipment.in,total_amount:"
+msgid "Total"
+msgstr "合计"
+
+msgctxt "field:stock.shipment.in,total_amount_cache:"
+msgid "Total Cache"
+msgstr "合计缓存"
+
+msgctxt "field:stock.shipment.in,untaxed_amount:"
+msgid "Untaxed"
+msgstr "未税"
+
+msgctxt "field:stock.shipment.in,untaxed_amount_cache:"
+msgid "Untaxed Cache"
+msgstr "未税金额缓存"
+
+msgctxt "field:stock.shipment.out,currency:"
+msgid "Currency"
+msgstr "货币"
+
+msgctxt "field:stock.shipment.out,tax_amount:"
+msgid "Tax"
+msgstr "税"
+
+msgctxt "field:stock.shipment.out,tax_amount_cache:"
+msgid "Tax Cache"
+msgstr "税缓存"
+
+msgctxt "field:stock.shipment.out,total_amount:"
+msgid "Total"
+msgstr "合计"
+
+msgctxt "field:stock.shipment.out,total_amount_cache:"
+msgid "Total Cache"
+msgstr "合计缓存"
+
+msgctxt "field:stock.shipment.out,untaxed_amount:"
+msgid "Untaxed"
+msgstr "未税"
+
+msgctxt "field:stock.shipment.out,untaxed_amount_cache:"
+msgid "Untaxed Cache"
+msgstr "未税金额缓存"
+
+msgctxt "field:stock.shipment.out.return,currency:"
+msgid "Currency"
+msgstr "货币"
+
+msgctxt "field:stock.shipment.out.return,tax_amount:"
+msgid "Tax"
+msgstr "税"
+
+msgctxt "field:stock.shipment.out.return,tax_amount_cache:"
+msgid "Tax Cache"
+msgstr "税缓存"
+
+msgctxt "field:stock.shipment.out.return,total_amount:"
+msgid "Total"
+msgstr "合计"
+
+msgctxt "field:stock.shipment.out.return,total_amount_cache:"
+msgid "Total Cache"
+msgstr "合计缓存"
+
+msgctxt "field:stock.shipment.out.return,untaxed_amount:"
+msgid "Untaxed"
+msgstr "未税"
+
+msgctxt "field:stock.shipment.out.return,untaxed_amount_cache:"
+msgid "Untaxed Cache"
+msgstr "未税金额缓存"
+
+msgctxt "view:stock.move:"
+msgid "%"
+msgstr "%"
+
+msgctxt "view:stock.move:"
+msgid "Discount"
+msgstr "折扣"
+
+msgctxt "view:stock.shipment.out:"
+msgid "These totals are calculated using the outgoing moves."
+msgstr "这些合计根据出库移动计算。"
