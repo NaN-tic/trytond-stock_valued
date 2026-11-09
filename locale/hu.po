@@ -1,0 +1,132 @@
+#
+msgid ""
+msgstr ""
+"Language: hu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "field:stock.move,amount:"
+msgid "Amount"
+msgstr "Összeg"
+
+msgctxt "field:stock.move,base_price:"
+msgid "Base Price"
+msgstr "Alapár"
+
+msgctxt "field:stock.move,discount:"
+msgid "Discount"
+msgstr "Engedmény"
+
+msgctxt "field:stock.move,discount_amount:"
+msgid "Discount Amount"
+msgstr "Engedmény (összeg)"
+
+msgctxt "field:stock.move,discount_formula:"
+msgid "Discount Formula"
+msgstr "Engedmény képlete"
+
+msgctxt "field:stock.move,discount_rate:"
+msgid "Discount Rate"
+msgstr "Engedmény (%)"
+
+msgctxt "field:stock.move,taxes:"
+msgid "Taxes"
+msgstr "Adók"
+
+msgctxt "field:stock.shipment.in,currency:"
+msgid "Currency"
+msgstr "Pénznem"
+
+msgctxt "field:stock.shipment.in,tax_amount:"
+msgid "Tax"
+msgstr "Adó"
+
+msgctxt "field:stock.shipment.in,tax_amount_cache:"
+msgid "Tax Cache"
+msgstr "Adóösszeg gyorsítótára"
+
+msgctxt "field:stock.shipment.in,total_amount:"
+msgid "Total"
+msgstr "Összesen"
+
+msgctxt "field:stock.shipment.in,total_amount_cache:"
+msgid "Total Cache"
+msgstr "Végösszeg gyorsítótára"
+
+msgctxt "field:stock.shipment.in,untaxed_amount:"
+msgid "Untaxed"
+msgstr "Nettó"
+
+msgctxt "field:stock.shipment.in,untaxed_amount_cache:"
+msgid "Untaxed Cache"
+msgstr "Nettó összeg gyorsítótára"
+
+msgctxt "field:stock.shipment.out,currency:"
+msgid "Currency"
+msgstr "Pénznem"
+
+msgctxt "field:stock.shipment.out,tax_amount:"
+msgid "Tax"
+msgstr "Adó"
+
+msgctxt "field:stock.shipment.out,tax_amount_cache:"
+msgid "Tax Cache"
+msgstr "Adóösszeg gyorsítótára"
+
+msgctxt "field:stock.shipment.out,total_amount:"
+msgid "Total"
+msgstr "Összesen"
+
+msgctxt "field:stock.shipment.out,total_amount_cache:"
+msgid "Total Cache"
+msgstr "Végösszeg gyorsítótára"
+
+msgctxt "field:stock.shipment.out,untaxed_amount:"
+msgid "Untaxed"
+msgstr "Nettó"
+
+msgctxt "field:stock.shipment.out,untaxed_amount_cache:"
+msgid "Untaxed Cache"
+msgstr "Nettó összeg gyorsítótára"
+
+msgctxt "field:stock.shipment.out.return,currency:"
+msgid "Currency"
+msgstr "Pénznem"
+
+msgctxt "field:stock.shipment.out.return,tax_amount:"
+msgid "Tax"
+msgstr "Adó"
+
+msgctxt "field:stock.shipment.out.return,tax_amount_cache:"
+msgid "Tax Cache"
+msgstr "Adóösszeg gyorsítótára"
+
+msgctxt "field:stock.shipment.out.return,total_amount:"
+msgid "Total"
+msgstr "Összesen"
+
+msgctxt "field:stock.shipment.out.return,total_amount_cache:"
+msgid "Total Cache"
+msgstr "Végösszeg gyorsítótára"
+
+msgctxt "field:stock.shipment.out.return,untaxed_amount:"
+msgid "Untaxed"
+msgstr "Nettó"
+
+msgctxt "field:stock.shipment.out.return,untaxed_amount_cache:"
+msgid "Untaxed Cache"
+msgstr "Nettó összeg gyorsítótára"
+
+msgctxt "view:stock.move:"
+msgid "%"
+msgstr "%"
+
+msgctxt "view:stock.move:"
+msgid "Discount"
+msgstr "Engedmény"
+
+msgctxt "view:stock.shipment.out:"
+msgid "These totals are calculated using the outgoing moves."
+msgstr "Ezek az összegek a kimenő készletmozgásokból számítódnak."
